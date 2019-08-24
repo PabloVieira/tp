@@ -19,6 +19,7 @@ prompt: .asciiz "How many Fibonacci numbers to generate? (2 <= x <= 19)"
 #      add  $s5, $v0, $zero  # transfer the number to the desired register
       
       li   $s2, 1           # 1 is the known value of first and second Fib. number
+      nop
       sw   $s2, 0($s0)      # F[0] = 1
       sw   $s2, 4($s0)      # F[1] = F[0] = 1
       addi $s1, $s5, -2     # Counter for loop, will execute (size-2) times
@@ -26,10 +27,12 @@ prompt: .asciiz "How many Fibonacci numbers to generate? (2 <= x <= 19)"
       # Loop to compute each Fibonacci number using the previous two Fib. numbers.
 loop: lw   $s3, 0($s0)      # Get value from array F[n-2]
       lw   $s4, 4($s0)      # Get value from array F[n-1]
+      nop
       add  $s2, $s3, $s4    # F[n] = F[n-1] + F[n-2]
       sw   $s2, 8($s0)      # Store newly computed F[n] in array
       addi $s0, $s0, 4      # increment address to now-known Fib. number storage
       addi $s1, $s1, -1     # decrement loop counter
+      nop
       bgtz $s1, loop        # repeat while not finished
       
       # Fibonacci numbers are computed and stored in array. Print them.

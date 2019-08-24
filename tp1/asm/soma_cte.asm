@@ -15,9 +15,11 @@ main:
         lw      $t1,0($t1)      # o registrador $t1 contém o tamanho do vetor
         la      $t2,const       # obtém o endereço da constante const
         lw      $t2,0($t2)      # o registrador $t2 contém a constante a somar
+        nop
 loop:   blez    $t1,end         # se o tamanho chega a 0, fim do processamento
         lw      $t3,0($t0)      # obtém um elemento do vetor
         addu    $t3,$t3,$t2     # soma a constante
+        nop
         sw      $t3,0($t0)      # atualiza o vetor
         addiu   $t0,$t0,4       # atualiza o apontador do vetor
         			# lembrar que 1 palavra no MIPS ocupa 4 bytes (4 endereços consecutivos) de memória
