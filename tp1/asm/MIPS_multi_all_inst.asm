@@ -20,6 +20,7 @@ main:	lui	$t0,0xf3	#
 	ori	$t1,$t1,0xe2	# $t1<= 0x005200e2
 	lui	$t2,0x00	#
 	ori	$t2,$t2,0x8f	# $t2<= 0x0000008f
+	nop
 	beq	$t1,$t2,loop	# Obviamente, esta instrução nunca deve saltar
 	bne	$t1,$t2,next_i	# Obviamente, esta instrução sempre deve saltar
 	addiu	$t2,$t2,0x8f	# Obviamente, esta instrução nunca deve executar
@@ -27,13 +28,11 @@ next_i:	addu	$t3,$t0,$t1	# $t3<= 0x00f30023 + 0x005200e2 = 0x01450105
 	subu	$t4,$t0,$t1	# $t4<= 0x00f30023 - 0x005200e2 = 0x00a0ff41
 	subu	$t5,$t1,$t1	# $t5<= 0x0
 	and	$t6,$t0,$t1	# $t6<= 0x00f30023 and 0x005200e2 = 0x00520022
+	nop
 	or	$t7,$t0,$t1	# $t7<= 0x00f30023 or  0x005200e2 = 0x00f300e3
 	xor	$t8,$t0,$t1	# $t8<= 0x00f30023 xor 0x005200e2 = 0x00a100c1
 	nor	$t9,$t0,$t1	# $t9<= 0x00f30023 nor 0x005200e2 = 0xff0cff1c
-	multu	$t0,$t1		# Hi & Lo <= 0x00f30023 * 0x005200e2 = 0x00004dd6e1bc1ee6
-	mfhi	$s0		# $s0<= 0x00004dd6
-	mflo	$s1		# $s1<= 0xe1bc1ee6
-	divu	$t0,$t1		# Hi,Lo<= 0x00f30023 mod,/ 0x005200e2 = 0x4efe5f,0x00000002
+	nop
 	addiu	$t0,$t0,0x00ab	# $t0<= 0x00f30023  +  0x000000ab = 0x00f300ce
 	andi	$t0,$t0,0x00ab	# $t0<= 0x00f300ce and 0x000000ab = 0x0000008a
 	xori	$t0,$t0,0xffab	# $t0<= 0x0000008a xor 0x0000ffab = 0x0000ff21
