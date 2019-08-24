@@ -1,19 +1,19 @@
 -------------------------------------------------------------------------
 --
--- I M P L E M E N T A Ç Ã O   P A R C I A L  D O  M I P S   (nov/2010)
+-- I M P L E M E N T A ï¿½ ï¿½ O   P A R C I A L  D O  M I P S   (nov/2010)
 --
---  ImPoRtAnTe :   VERSÃO  SEM MULTIPLICAÇÃO/DIVISÃO
+--  ImPoRtAnTe :   VERSï¿½O  SEM MULTIPLICAï¿½ï¿½O/DIVISï¿½O
 --
 --  Professores     Fernando Moraes / Ney Calazans
 --
 --  ==> The top-level processor entity is MRstd
 --  21/06/2010 - Bug corrigido no mux que gera op1 - agora recebe npc e
---		não pc.
+--		nï¿½o pc.
 --  17/11/2010 (Ney) - Bugs corrigidos:
---	1 - Decodificação das instruções BGEZ e BLEZ estava incompleta
+--	1 - Decodificaï¿½ï¿½o das instruï¿½ï¿½es BGEZ e BLEZ estava incompleta
 --		Modificadas linhas 395 e 396 abaixo
---	2 - Definição de que linhas escolhem o registrador a ser escrito
---	nas instruções de deslocamento (SSLL, SLLV, SSRA, SRAV, SSRL e SRLV)
+--	2 - Definiï¿½ï¿½o de que linhas escolhem o registrador a ser escrito
+--	nas instruï¿½ï¿½es de deslocamento (SSLL, SLLV, SSRA, SRAV, SSRL e SRLV)
 --		Acrescentadas linhas 325 a 327 abaixo
 -------------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ package p_MRstd is
     
     -- inst_type defines the instructions decodeable by the control unit
     type inst_type is  
-            ( ADDU, SUBU, AAND, OOR, XXOR, NNOR, SSLL, SLLV, SSRA, SRAV, SSRL, SRLV,
+            ( ADDU, NOP, SUBU, AAND, OOR, XXOR, NNOR, SSLL, SLLV, SSRA, SRAV, SSRL, SRLV,
             ADDIU, ANDI, ORI, XORI, LUI, LBU, LW, SB, SW, SLT, SLTU, SLTI,
             SLTIU, BEQ, BGEZ, BLEZ, BNE, J, JAL, JALR, JR, invalid_instruction);
  
@@ -174,7 +174,7 @@ begin
         to_StdLogicVector(to_bitvector(op2) sra  CONV_INTEGER(op1(5 downto 0)))    when  op_alu=SRAV   else 
         to_StdLogicVector(to_bitvector(op1) srl  CONV_INTEGER(op2(10 downto 6)))   when  op_alu=SSRL   else 
         to_StdLogicVector(to_bitvector(op2) srl  CONV_INTEGER(op1(5 downto 0)))    when  op_alu=SRLV   else 
-        op1 + op2;    -- default for ADDU,ADDIU,LBU,LW,SW,SB,BEQ,BGEZ,BLEZ,BNE    
+        op1 + op2;    -- default for ADDU, NOP,ADDIU,LBU,LW,SW,SB,BEQ,BGEZ,BLEZ,BNE    
 
 end alu;
 
@@ -212,7 +212,7 @@ begin
    inst_branch  <= '1' when uins.i=BEQ or uins.i=BGEZ or uins.i=BLEZ or uins.i=BNE else 
                   '0';
                   
-   inst_grupo1  <= '1' when uins.i=ADDU or uins.i=SUBU or uins.i=AAND
+   inst_grupo1  <= '1' when uins.i=ADDU or uins.i=NOP or uins.i=SUBU or uins.i=AAND
                          or uins.i=OOR or uins.i=XXOR or uins.i=NNOR else
                    '0';
 
@@ -367,6 +367,7 @@ begin
     -- This block generates 1 Output Function of the Control Unit
     ----------------------------------------------------------------------------------------
     i <=   ADDU   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100001" else
+           NOP    when ir(31 downto 26)="000000" and ir(10 downto 0)="00000000000" else
            SUBU   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100011" else
            AAND   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100100" else
            OOR    when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100101" else
