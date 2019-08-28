@@ -237,7 +237,7 @@ begin
       ck => ck,
       npcIN => incpc,
       IRIN => instruction,
-      npcOUT => npc;
+      npcOUT => npc,
       IROUT => IR
    );
    
