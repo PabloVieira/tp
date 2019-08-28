@@ -3,7 +3,7 @@ use IEEE.std_logic_1164.all;
 use work.p_MRstd.all;
 
 entity bidi is
-           port(  ck, ce : in std_logic;
+           port(  ck : in std_logic;
                   npcIN: in std_logic_vector(31 downto 0);
                   IRIN: in std_logic_vector(31 downto 0);
                   npcOUT: out std_logic_vector(31 downto 0);

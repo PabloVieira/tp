@@ -225,14 +225,21 @@ begin
   
    incpc <= pc + 4;
   
-   RNPC: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>incpc,       Q=>npc);     
-           
-   RIR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>instruction, Q=>IR);
+--   RNPC: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>incpc,       Q=>npc);     
+--           
+--   RIR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>instruction, Q=>IR);
+--
+--   IR_OUT <= ir ;    -- IR is the datapath output signal to carry the instruction
+--             
+--   i_address <= pc;  -- connects PC output to the instruction memory address bus
 
-   IR_OUT <= ir ;    -- IR is the datapath output signal to carry the instruction
-             
-   i_address <= pc;  -- connects PC output to the instruction memory address bus
-   
+   BIDI: entity work.BIDI port map (
+      ck => ck,
+      npcIN => incpc,
+      IRIN => instruction,
+      npcOUT => npc;
+      IROUT => IR
+   );
    
    --==============================================================================
    -- second stage
