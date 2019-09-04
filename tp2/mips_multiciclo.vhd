@@ -223,7 +223,7 @@ begin
    -- first_stage
    --==============================================================================
   
-   incpc <= pc + 4;
+--   incpc <= pc + 4;
   
 --   RNPC: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>incpc,       Q=>npc);     
 --           
@@ -233,12 +233,12 @@ begin
 --             
 --   i_address <= pc;  -- connects PC output to the instruction memory address bus
 
-   BIDI: entity work.BIDI port map (
+   BIDI: entity work.bidi port map (
       ck => ck,
-      npcIN => incpc,
-      IRIN => instruction,
-      npcOUT => npc,
-      IROUT => IR
+      incpc => incpc,
+      instruction => instruction,
+      npc => npc,
+      IR => IR
    );
    
    --==============================================================================
@@ -268,12 +268,22 @@ begin
                 -- The default case is used by addiu, lbu, lw, sbu and sw instructions
              
    -- second stage registers
-   REG_S:  entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>R1,     Q=>RA);
+   -- REG_S:  entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>R1,     Q=>RA);
 
-   REG_T:  entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>R2,     Q=>RB);
+   -- REG_T:  entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>R2,     Q=>RB);
   
-   REG_IM: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>cte_im, Q=>IMED);
- 
+   -- REG_IM: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>cte_im, Q=>IMED);
+
+
+   DIEX: entity work.diex port map (
+      ck => ck,
+      R1 => R1,
+      R2 => R2,
+      cte_im => cte_im,
+      RA => RA,
+      RB => RB,
+      IMED => IMED
+   );
  
   --==============================================================================
    -- third stage
@@ -292,13 +302,18 @@ begin
    inst_alu: entity work.alu port map (op1=>op1, op2=>op2, outalu=>outalu, op_alu=>uins.i);
                                    
    -- ALU register
-   REG_alu: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.walu, D=>outalu, Q=>RALU);               
+   --REG_alu: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.walu, D=>outalu, Q=>RALU);               
  
    -- evaluation of conditions to take the branch instructions
    salta <=  '1' when ( (RA=RB  and uins.i=BEQ)  or (RA>=0  and uins.i=BGEZ) or
                         (RA<=0  and uins.i=BLEZ) or (RA/=RB and uins.i=BNE) )  else
              '0';
-                  
+                 
+   EXMEM: entity work.exmem port map (
+      ck => ck,
+      outalu => outalu,
+      RALU => RALU
+   );
              
    --==============================================================================
    -- fourth stage
@@ -313,10 +328,16 @@ begin
    mdr_int <= data when uins.i=LW  else
               x"000000" & data(7 downto 0);
        
-   RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
+   --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
   
    result <=    MDR when uins.i=LW  or uins.i=LBU else
                 RALU;
+
+   MEMER: entity work.memer port map (
+      ck => ck,
+      mdr_int => mdr_int,
+      MDR => MDR
+   );  
 
    --==============================================================================
    -- fifth stage
@@ -342,8 +363,14 @@ begin
    -- Code memory starting address: beware of the OFFSET! 
    -- The one below (x"00400000") serves for code generated 
    -- by the MARS simulator
-   rpc: entity work.regnbit generic map(INIT_VALUE=>x"00400000")   
-                            port map(ck=>ck, rst=>rst, ce=>uins.wpc, D=>dtpc, Q=>pc);
+   --rpc: entity work.regnbit generic map(INIT_VALUE=>x"00400000")   
+     --                       port map(ck=>ck, rst=>rst, ce=>uins.wpc, D=>dtpc, Q=>pc);
+
+   ERBI: entity work.erbi port map (
+      ck => ck,
+      dtpc => dtpc,
+      pc => pc
+   );
 
 end datapath;
 

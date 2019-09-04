@@ -4,10 +4,10 @@ use work.p_MRstd.all;
 
 entity bidi is
            port(  ck : in std_logic;
-                  npcIN: in std_logic_vector(31 downto 0);
-                  IRIN: in std_logic_vector(31 downto 0);
-                  npcOUT: out std_logic_vector(31 downto 0);
-                  IROUT: out std_logic_vector(31 downto 0)
+                incpc: in std_logic_vector(31 downto 0);
+                instruction: in std_logic_vector(31 downto 0);
+                npc: out std_logic_vector(31 downto 0);
+                IR: out std_logic_vector(31 downto 0)
                );
 end bidi;
 
@@ -17,8 +17,10 @@ begin
   process(ck)
   begin
         if ck'event and ck = '0' then
-            npcOUT <= npcIN;
-            IROUT <= IRIN;
+          --if ce = '1' then
+            npc <= incpc;
+            IR <= instruction;
+          --end if;
         end if;
   end process;
         
