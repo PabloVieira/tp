@@ -43,6 +43,18 @@ package p_MRstd is
             bw:    std_logic;       -- Byte-word control (mem write only)
             i:     inst_type;       -- operation specification
     end record;
+
+--    type controlSignals is record
+--        RegDest: std_logic;
+--        ULAFonte: std_logic;
+--        ULAOp0: std_logic;
+--        ULAOp1: std_logic;
+--        DvC: std_logic;
+--        LerMem: std_logic;
+--        EscMem: std_logic;
+--        MemParaReg: std_logic;
+--        EscReg: std_logic;
+--    end record;
          
 end p_MRstd;
 
