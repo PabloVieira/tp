@@ -10,7 +10,8 @@ use work.p_MRstd.all;
 entity control_unit is
         port(   ck, rst : in std_logic;          
                 uins : out microinstruction;
-                ir : in std_logic_vector(31 downto 0)
+                ir : in std_logic_vector(31 downto 0);
+                sinaisDeControle: out sinalDeControle
              );
 end control_unit;
                    
@@ -65,86 +66,25 @@ begin
           report "******************* INVALID INSTRUCTION *************"
           severity error;
                    
-    uins.i <= i;    -- this instructs the alu to execute its expected operation, if any
-
-    ----------------------------------------------------------------------------------------
-    -- BLOCK (2/3) - DATAPATH REGISTERS load control signals generation.
-    ----------------------------------------------------------------------------------------
-    uins.CY1   <= '1' when PS=Sfetch         else '0';
-            
-    uins.CY2   <= '1' when PS=Sreg           else '0';
-  
-    uins.walu  <= '1' when PS=Salu           else '0';
-                
-    uins.wmdr  <= '1' when PS=Sld            else '0';
-  
-    uins.wreg   <= '1' when PS=Swbk or (PS=Ssalta and (i=JAL or i=JALR)) else   '0';
+    sinaisDeControle.EscReg 		<= '0' when (i_sig=SW or i_sig=SB or i_sig=BEQ or i_sig=BGEZ or i_sig=BLEZ or i_sig=BNE)  else '1';
    
-    uins.rw    <= '0' when PS=Sst            else  '1';
-                  
-    uins.ce    <= '1' when PS=Sld or PS=Sst  else '0';
-    
-    uins.bw    <= '0' when PS=Sst and i=SB   else '1';
+    sinaisDeControle.EscMem    	<= '1' when i_sig=SB or i_sig=SW else '0';
       
-    uins.wpc   <= '1' when PS=Swbk or PS=Sst or PS=Ssalta  else  '0';
-  
-    ---------------------------------------------------------------------------------------------
-    -- BLOCK (3/3) - Sequential part of the control unit - two processes implementing the
-    -- Control Unit state register and the next-state (combinational) function
-    --------------------------------------------------------------------------------------------- 
-    process(rst, ck)
-    begin
-       if rst='1' then
-            PS <= Sidle;          -- Sidle is the state the machine stays while processor is being reset
-       elsif ck'event and ck='1' then
-       
-            if PS=Sidle then
-                  PS <= Sfetch;
-            else
-                  PS <= NS;
-            end if;
-                
-       end if;
-    end process;
-     
-     
-    process(PS, i)
-    begin
-       case PS is         
       
-            when Sidle=>NS <= Sidle; -- reset being active, the processor do nothing!       
-
-            -- first stage:  read the current instruction 
-            --
-            when Sfetch=>NS <= Sreg;  
-     
-            -- second stage: read the register banck and store the mask (when i=stmsk)
-            --
-            when Sreg=>NS <= Salu;  
-             
-            -- third stage: alu operation 
-            --
-            when Salu =>if i=LBU  or i=LW then 
-                                NS <= Sld;  
-                          elsif i=SB or i=SW then 
-                                NS <= Sst;
-                          elsif i=J or i=JAL or i=JALR or i=JR or i=BEQ
-                                    or i=BGEZ or i=BLEZ  or i=BNE then 
-                                NS <= Ssalta;  
-                          else 
-                                NS <= Swbk; 
-                          end if;
-                         
-            -- fourth stage: data memory operation  
-            --
-            when Sld=>  NS <= Swbk; 
-            
-            -- fifth clock cycle of most instructions  - GO BACK TO FETCH
-            -- 
-            when Sst | Ssalta | Swbk=>NS <= Sfetch;
+    sinaisDeControle.RegDst  <= "00" when i_sig=ADDIU or i_sig=ANDI or i_sig=BEQ
+             or i_sig=BNE or i_sig=LBU or i_sig=LUI or i_sig=LW or i_sig=ORI 
+             or i_sig=SB or i_sig=SLTI or i_sig=SLTIU or i_sig=SW else
+             "10" when i_sig=JAL else
+                     "01";
   
-       end case;
-
-    end process;
+    sinaisDeControle.ULAFonte	<= '1' when i_sig=ADDIU or i_sig=ANDI or i_sig=BEQ
+                     or i_sig=BNE or i_sig=LBU or i_sig=LUI or i_sig=LW or i_sig=ORI 
+                     or i_sig=SB or i_sig=SLTI or i_sig=SLTIU or i_sig=SW else '0';
+  
+    sinaisDeControle.DvC		<= '1' when i_sig=BEQ or i_sig=BGEZ or i_sig=BLEZ or i_sig=BNE or i_sig=J else '0';
+  
+    sinaisDeControle.LerMem		<= '1' when i_sig=LW or i_sig=LBU else '0';
+  
+    sinaisDeControle.MemParaReg  <= '1' when i_sig=LW or i_sig=LBU else '0';
     
 end control_unit;

@@ -26,6 +26,7 @@ architecture datapath of datapath is
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
     signal inst_branch, inst_grupo1, inst_grupoI: std_logic;   
     signal salta : std_logic := '0';
+    signal controlSignals1, controlSignals2, controlSignals3, controlSignals4: sinalDeControle;
 begin
 
    -- auxiliary signals 
@@ -102,7 +103,9 @@ begin
       cte_im => cte_im,
       RA => RA,
       RB => RB,
-      IMED => IMED
+      IMED => IMED,
+      controlSignalsIN => controlSignals1,
+      controlSignalsOUT => controlSignals2
    );
  
   --==============================================================================
@@ -132,7 +135,9 @@ begin
    EXMEM: entity work.exmem port map (
       ck => ck,
       outalu => outalu,
-      RALU => RALU
+      RALU => RALU,
+      controlSignalsIN => controlSignals2,
+      controlSignalsOUT => controlSignals3
    );
              
    --==============================================================================
@@ -156,7 +161,9 @@ begin
    MEMER: entity work.memer port map (
       ck => ck,
       mdr_int => mdr_int,
-      MDR => MDR
+      MDR => MDR,
+      controlSignalsIN => controlSignals3,
+      controlSignalsOUT => controlSignals4
    );  
 
    --==============================================================================
