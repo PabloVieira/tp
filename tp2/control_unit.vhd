@@ -8,16 +8,13 @@ use IEEE.Std_Logic_1164.all;
 use work.p_MRstd.all;
 
 entity control_unit is
-        port(   ck, rst : in std_logic;          
-                uins : out microinstruction;
+        port(   ck, rst : in std_logic;     
                 ir : in std_logic_vector(31 downto 0);
                 sinaisDeControle: out sinalDeControle
              );
 end control_unit;
                    
 architecture control_unit of control_unit is
-   type type_state is (Sidle, Sfetch, Sreg, Salu, Swbk, Sld, Sst, Ssalta);
-   signal PS, NS : type_state;
    signal i : inst_type;      
 begin
       
@@ -66,25 +63,60 @@ begin
           report "******************* INVALID INSTRUCTION *************"
           severity error;
                    
-    sinaisDeControle.EscReg 		<= '0' when (i_sig=SW or i_sig=SB or i_sig=BEQ or i_sig=BGEZ or i_sig=BLEZ or i_sig=BNE)  else '1';
+    
+        sinaisDeControle.RegDst  <= "00" when i=ADDIU or 
+                                              i=ANDI or
+                                              i=BEQ or
+                                              i=BNE or
+                                              i=LBU or
+                                              i=LUI or
+                                              i=LW or
+                                              i=ORI or
+                                              i=SB or
+                                              i=SLTI or
+                                              i=SLTIU or
+                                              i=SW else
+                                    "10" when i=JAL else "01";
+
+        sinaisDeControle.ULAFonte <= '1' when i=ADDIU or
+                                              i=ANDI or
+                                              i=BEQ or
+                                              i=BNE or
+                                              i=LBU or
+                                              i=LUI or
+                                              i=LW or
+                                              i=ORI or
+                                              i=SB or
+                                              i=SLTI or
+                                              i=SLTIU or
+                                              i=SW
+                                         else '0';
+
+        sinaisDeControle.EscReg <= '0' when i=SW or
+                                            i=SB or
+                                            i=BEQ or
+                                            i=BGEZ or 
+                                            i=BLEZ or
+                                            i=BNE
+                                        else '1';
+
+        sinaisDeControle.DvC <= '1' when i=BEQ or
+                                         i=BGEZ or
+                                         i=BLEZ or
+                                         i=BNE or
+                                         i=J else '0';
    
-    sinaisDeControle.EscMem    	<= '1' when i_sig=SB or i_sig=SW else '0';
+        sinaisDeControle.EscMem    	<= '1' when i=SB or i=SW else '0';
       
       
-    sinaisDeControle.RegDst  <= "00" when i_sig=ADDIU or i_sig=ANDI or i_sig=BEQ
-             or i_sig=BNE or i_sig=LBU or i_sig=LUI or i_sig=LW or i_sig=ORI 
-             or i_sig=SB or i_sig=SLTI or i_sig=SLTIU or i_sig=SW else
-             "10" when i_sig=JAL else
-                     "01";
+    
   
-    sinaisDeControle.ULAFonte	<= '1' when i_sig=ADDIU or i_sig=ANDI or i_sig=BEQ
-                     or i_sig=BNE or i_sig=LBU or i_sig=LUI or i_sig=LW or i_sig=ORI 
-                     or i_sig=SB or i_sig=SLTI or i_sig=SLTIU or i_sig=SW else '0';
+    
   
-    sinaisDeControle.DvC		<= '1' when i_sig=BEQ or i_sig=BGEZ or i_sig=BLEZ or i_sig=BNE or i_sig=J else '0';
+    
   
-    sinaisDeControle.LerMem		<= '1' when i_sig=LW or i_sig=LBU else '0';
+    sinaisDeControle.LerMem		<= '1' when i=LW or i=LBU else '0';
   
-    sinaisDeControle.MemParaReg  <= '1' when i_sig=LW or i_sig=LBU else '0';
+    sinaisDeControle.MemParaReg  <= '1' when i=LW or i=LBU else '0';
     
 end control_unit;
