@@ -28,8 +28,7 @@ package p_MRstd is
     type sinalDeControle is record
         RegDest: std_logic;
         ULAFonte: std_logic;
-        ULAOp0: std_logic;
-        ULAOp1: std_logic;
+        ULAOp: inst_type;
         DvC: std_logic;
         LerMem: std_logic;
         EscMem: std_logic;

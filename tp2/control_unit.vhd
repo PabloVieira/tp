@@ -64,19 +64,13 @@ begin
           severity error;
                    
     
-        sinaisDeControle.RegDst  <= "00" when i=ADDIU or 
-                                              i=ANDI or
-                                              i=BEQ or
-                                              i=BNE or
-                                              i=LBU or
-                                              i=LUI or
-                                              i=LW or
-                                              i=ORI or
-                                              i=SB or
-                                              i=SLTI or
-                                              i=SLTIU or
-                                              i=SW else
-                                    "10" when i=JAL else "01";
+        sinaisDeControle.RegDst  <= '1' when i=ADDU or
+                                             i=SUBU or
+                                             i=AAND or
+                                             
+                                        else '0';
+
+        sinaisDeControle.ULAOp <=  i;                                   
 
         sinaisDeControle.ULAFonte <= '1' when i=ADDIU or
                                               i=ANDI or
