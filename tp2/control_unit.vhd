@@ -67,50 +67,71 @@ begin
         sinaisDeControle.RegDst  <= '1' when i=ADDU or
                                              i=SUBU or
                                              i=AAND or
-                                             
+                                             i=OOR or
+                                             i=XXOR or
+                                             i=NNOR or
+                                             i=NNOR or
+                                             i=SSL or
+                                             i=SSLV or
+                                             i=SSRA or
+                                             i=SRAV or
+                                             i=SSRL or
+                                             i=SRLV or
+                                             i=ADDIU or
+                                             i=OORI or
+                                             i=XORI                                             
                                         else '0';
 
         sinaisDeControle.ULAOp <=  i;                                   
 
-        sinaisDeControle.ULAFonte <= '1' when i=ADDIU or
-                                              i=ANDI or
-                                              i=BEQ or
-                                              i=BNE or
+        sinaisDeControle.ULAFonte <= '1' when i=LUI or
                                               i=LBU or
-                                              i=LUI or
                                               i=LW or
-                                              i=ORI or
                                               i=SB or
-                                              i=SLTI or
-                                              i=SLTIU or
-                                              i=SW
+                                              i=SW                                              
                                          else '0';
 
-        sinaisDeControle.EscReg <= '0' when i=SW or
-                                            i=SB or
-                                            i=BEQ or
-                                            i=BGEZ or 
-                                            i=BLEZ or
-                                            i=BNE
-                                        else '1';
-
-        sinaisDeControle.DvC <= '1' when i=BEQ or
+        sinaisDeControle.DvC <= '1' when i=SLT or
+                                         i=SLTU or
+                                         i=SLTI or
+                                         i=SLTIU or
+                                         i=BEQ or
                                          i=BGEZ or
                                          i=BLEZ or
                                          i=BNE or
-                                         i=J else '0';
-   
-        sinaisDeControle.EscMem    	<= '1' when i=SB or i=SW else '0';
-      
-      
-    
-  
-    
-  
-    
-  
-    sinaisDeControle.LerMem		<= '1' when i=LW or i=LBU else '0';
-  
-    sinaisDeControle.MemParaReg  <= '1' when i=LW or i=LBU else '0';
+                                         i=J or
+                                         i=JAL or
+                                         i=JALR or
+                                         i=JR
+                                    else '0';
+
+        sinaisDeControle.LerMem	<= '1' when i=LUI or
+                                            i=LBU or
+                                            i=LW or
+                                       else '0';
+
+        sinaisDeControle.EscMem	<= '1' when i=SB or i=SW
+                                       else '0';
+
+        sinaisDeControle.EscReg <= '0' when i=SW or
+                                            i=SB or
+                                            i=SLT or
+                                            i=SLTU or
+                                            i=SLTI or
+                                            i=SLTIU or
+                                            i=BEQ or
+                                            i=BGEZ or
+                                            i=BLEZ or
+                                            i=BNE or
+                                            i=J or
+                                            i=JAL or
+                                            i=JALR or
+                                            i=JR
+                                        else '1';  
+            
+        sinaisDeControle.MemParaReg  <= '1' when i=LUI or
+                                                 i=LBU or
+                                                 i=LW
+                                            else '0';
     
 end control_unit;
