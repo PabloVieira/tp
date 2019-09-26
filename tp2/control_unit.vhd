@@ -61,8 +61,7 @@ begin
         
     assert i /= invalid_instruction
           report "******************* INVALID INSTRUCTION *************"
-          severity error;
-                   
+          severity error;                   
     
         sinaisDeControle.RegDst  <= '1' when i=ADDU or
                                              i=SUBU or
@@ -79,8 +78,7 @@ begin
                                              i=SRLV or
                                              i=ADDIU or
                                              i=OORI or
-                                             i=XORI                                             
-                                        else '0';
+                                             i=XORI    else '0';
 
         sinaisDeControle.ULAOp <=  i;                                   
 
@@ -88,8 +86,7 @@ begin
                                               i=LBU or
                                               i=LW or
                                               i=SB or
-                                              i=SW                                              
-                                         else '0';
+                                              i=SW     else '0';
 
         sinaisDeControle.DvC <= '1' when i=SLT or
                                          i=SLTU or
@@ -102,16 +99,13 @@ begin
                                          i=J or
                                          i=JAL or
                                          i=JALR or
-                                         i=JR
-                                    else '0';
+                                         i=JR     else '0';
 
         sinaisDeControle.LerMem	<= '1' when i=LUI or
                                             i=LBU or
-                                            i=LW or
-                                       else '0';
+                                            i=LW or    else '0';
 
-        sinaisDeControle.EscMem	<= '1' when i=SB or i=SW
-                                       else '0';
+        sinaisDeControle.EscMem	<= '1' when i=SB or i=SW      else '0';
 
         sinaisDeControle.EscReg <= '0' when i=SW or
                                             i=SB or
@@ -126,12 +120,10 @@ begin
                                             i=J or
                                             i=JAL or
                                             i=JALR or
-                                            i=JR
-                                        else '1';  
+                                            i=JR       else '1';  
             
         sinaisDeControle.MemParaReg  <= '1' when i=LUI or
                                                  i=LBU or
-                                                 i=LW
-                                            else '0';
+                                                 i=LW       else '0';
     
 end control_unit;
