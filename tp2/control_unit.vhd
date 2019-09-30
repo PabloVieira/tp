@@ -1,23 +1,19 @@
 --------------------------------------------------------------------------
---------------------------------------------------------------------------
 --  Control Unit behavioral description 
---------------------------------------------------------------------------
 --------------------------------------------------------------------------
 library IEEE;
 use IEEE.Std_Logic_1164.all;
 use work.p_MRstd.all;
 
 entity control_unit is
-        port(   ck, rst : in std_logic;     
-                ir : in std_logic_vector(31 downto 0);
+        port(   ir : in std_logic_vector(31 downto 0);
                 sinaisDeControle: out sinalDeControle
              );
 end control_unit;
                    
 architecture control_unit of control_unit is
    signal i : inst_type;      
-begin
-      
+begin      
     ----------------------------------------------------------------------------------------
     -- BLOCK (1/3) - INSTRUCTION DECODING and ALU operation definition.
     -- This block generates 1 Output Function of the Control Unit

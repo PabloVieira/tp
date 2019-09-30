@@ -1,7 +1,5 @@
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
---++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 -- Datapath structural description
---++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 library IEEE;
 use IEEE.Std_Logic_1164.all;
@@ -15,13 +13,12 @@ entity datapath is
              instruction : in std_logic_vector(31 downto 0);
              d_address :   out std_logic_vector(31 downto 0);
              data :        inout std_logic_vector(31 downto 0);  
-             uins :        in microinstruction;
              IR_OUT :      out std_logic_vector(31 downto 0)
           );
 end datapath;
 
 architecture datapath of datapath is
-    signal incpc, pc, npc, IR,  result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
+    signal incpc, pc, npc1, npc2, IR, result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALU, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
     signal inst_branch, inst_grupo1, inst_grupoI: std_logic;   
@@ -43,28 +40,20 @@ begin
    --==============================================================================
    -- first_stage
    --==============================================================================
-  
---   incpc <= pc + 4;
-  
---   RNPC: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>incpc,       Q=>npc);     
---           
---   RIR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>instruction, Q=>IR);
---
---   IR_OUT <= ir ;    -- IR is the datapath output signal to carry the instruction
---             
---   i_address <= pc;  -- connects PC output to the instruction memory address bus
 
    BIDI: entity work.bidi port map (
       ck => ck,
       incpc => incpc,
       instruction => instruction,
-      npc => npc,
+      npc => npc1,
       IR => IR
    );
    
    --==============================================================================
    -- second stage
    --==============================================================================
+   ct: entity work.control_unit
+            port map(ir=>IR, sinaisDeControle=>controlSignals1);
                 
    -- The then clause is only used for logic shifts with shamt field       
    adS <= IR(20 downto 16) when uins.i=SSLL or uins.i=SSRA or uins.i=SSRL else 
@@ -87,14 +76,6 @@ begin
                 -- logic instructions with immediate operand are zero extended
              ext16;
                 -- The default case is used by addiu, lbu, lw, sbu and sw instructions
-             
-   -- second stage registers
-   -- REG_S:  entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>R1,     Q=>RA);
-
-   -- REG_T:  entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>R2,     Q=>RB);
-  
-   -- REG_IM: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY2, D=>cte_im, Q=>IMED);
-
 
    DIEX: entity work.diex port map (
       ck => ck,
@@ -104,6 +85,8 @@ begin
       RA => RA,
       RB => RB,
       IMED => IMED,
+      npcIN => npc1,
+      npcOUT => npc2,
       controlSignalsIN => controlSignals1,
       controlSignalsOUT => controlSignals2
    );
