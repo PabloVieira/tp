@@ -24,8 +24,24 @@ architecture datapath of datapath is
     signal inst_branch2e, inst_branch3e, inst_branch5e, inst_grupo1e3, inst_grupo1e5: std_logic;   
     signal salta : std_logic := '0';
     signal controlSignals2e, controlSignals3e, controlSignals4e, controlSignals5e: sinalDeControle;
-begin
+begin              
+   --==============================================================================
+   -- first_stage
+   --==============================================================================
 
+   BIDI: entity work.bidi port map (
+      ck => ck,
+      incpc => incpc,
+      instruction => instruction,
+      npc => npc1,
+      IR => IR
+   );
+   
+   --==============================================================================
+   -- second stage
+   --==============================================================================
+   ct: entity work.control_unit  port map(ir=>IR, sinaisDeControle=>controlSignals2e);
+   
    -- auxiliary signals 
    inst_branch2e  <= '1' when controlSignals2e.ULAOp=BEQ or controlSignals2e.ULAOp=BGEZ or
                              controlSignals2e.ULAOp=BLEZ or controlSignals2e.ULAOp=BNE
@@ -44,31 +60,14 @@ begin
    inst_grupo1e5  <= '1' when controlSignals5e.ULAOp=ADDU or controlSignals5e.ULAOp=NOP or controlSignals5e.ULAOp=SUBU or
                               controlSignals5e.ULAOp=AAND or controlSignals5e.ULAOp=OOR or controlSignals5e.ULAOp=XXOR or
                               controlSignals5e.ULAOp=NNOR
-                        else '0';                
-
-   --==============================================================================
-   -- first_stage
-   --==============================================================================
-
-   BIDI: entity work.bidi port map (
-      ck => ck,
-      incpc => incpc,
-      instruction => instruction,
-      npc => npc1,
-      IR => IR
-   );
-   
-   --==============================================================================
-   -- second stage
-   --==============================================================================
-   ct: entity work.control_unit  port map(ir=>IR, sinaisDeControle=>controlSignals2e);
+                        else '0';
                 
    -- The then clause is only used for logic shifts with shamt field       
    adS <= IR(20 downto 16) when controlSignals2e.ULAOp=SSLL or controlSignals2e.ULAOp=SSRA or controlSignals2e.ULAOp=SSRL
                            else IR(25 downto 21);
           
    REGS: entity work.reg_bank(reg_bank) port map
-        (ck=>ck, rst=>rst, wreg=>uins.wreg, AdRs=>adS, AdRt=>ir(20 downto 16), adRD=>adD,  
+        (ck=>ck, rst=>rst, wreg=>controlSignals2e.EscReg, AdRs=>adS, AdRt=>ir(20 downto 16), adRD=>adD,  
          Rd=>RIN, R1=>R1, R2=>R2);
     
    -- sign extension 
@@ -135,7 +134,7 @@ begin
    d_address <= RALU;
     
    -- tristate to control memory write    
-   data <= RB when (uins.ce='1' and uins.rw='0') else (others=>'Z');  
+   data <= RB when (controlSignals4e.ce='1' and controlSignals4e.rw='0') else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
    mdr_int <= data when controlSignals4e.ULAOp=LW  else x"000000" & data(7 downto 0);
