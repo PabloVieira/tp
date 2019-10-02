@@ -56,7 +56,7 @@ begin
             port map(ir=>IR, sinaisDeControle=>controlSignals1);
                 
    -- The then clause is only used for logic shifts with shamt field       
-   adS <= IR(20 downto 16) when uins.i=SSLL or uins.i=SSRA or uins.i=SSRL else 
+   adS <= IR(20 downto 16) when controlSignals1.ULAOp=SSLL or uins.i=SSRA or uins.i=SSRL else 
           IR(25 downto 21);
           
    REGS: entity work.reg_bank(reg_bank) port map
@@ -100,8 +100,8 @@ begin
           RA; 
      
    -- select the second ALU operand
-   op2 <= RB when inst_grupo1='1' or uins.i=SLTU or uins.i=SLT or uins.i=JR 
-                  or uins.i=SLLV or uins.i=SRAV or uins.i=SRLV else 
+   op2 <= RB when inst_grupo1='1' or controlSignals2.i=SLTU or controlSignals2.i=SLT or controlSignals2.i=JR 
+                  or controlSignals2.i=SLLV or controlSignals2.i=SRAV or controlSignals2.i=SRLV else 
           IMED; 
                  
    -- ALU instantiation
