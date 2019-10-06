@@ -22,16 +22,16 @@ architecture datapath of datapath is
     signal incpc, pc, npc1, npc2, IR, result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALU, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
-    signal inst_branch1e, inst_branch2e, inst_branch3e, inst_grupo1e3, inst_grupo1e5: std_logic;   
+    signal inst_branch2e, inst_branch3e, inst_grupo1e2, inst_grupo1e3: std_logic;   
     signal salta : std_logic := '0';
     signal controlSignals3e, controlSignals4e, controlSignals5e: sinalDeControle;
 begin              
    --==============================================================================
    -- first_stage
    --==============================================================================
-   dtpc <= result when (inst_branch1e='1' and salta='1') or controlSignals4e.ULAOp=J    or
-                        controlSignals4e.ULAOp=JAL or controlSignals4e.ULAOp=JALR or controlSignals4e.ULAOp=JR  
-                  else npc2;
+   dtpc <= result when (inst_branch3e='1' and salta='1') or controlSignals3e.ULAOp=J    or
+                        controlSignals3e.ULAOp=JAL or controlSignals3e.ULAOp=JALR or controlSignals3e.ULAOp=JR  
+                  else incpc;
 
 -- Code memory starting address: beware of the OFFSET! 
 -- The one below (x"00400000") serves for code generated 
@@ -61,12 +61,22 @@ ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")
       IR => IR
    );
 
+   -- signal to be written into the register bank
+   RIN <= npc1 when (controlSignals2e.ULAOp=JALR or controlSignals2e.ULAOp=JAL) else result;
+
+   -- register bank write address selection
+   adD <=   "11111"          when controlSignals2e.ULAOp=JAL  else -- JAL writes in register $31
+            IR(15 downto 11) when inst_grupo1e2='1' or controlSignals2e.ULAOp=SLTU or controlSignals2e.ULAOp=SLT or
+                              controlSignals2e.ULAOp=JALR or controlSignals2e.ULAOp=SSLL or
+                              controlSignals2e.ULAOp=SLLV or controlSignals2e.ULAOp=SSRA or
+                              controlSignals2e.ULAOp=SRAV or controlSignals2e.ULAOp=SSRL or
+                              controlSignals2e.ULAOp=SRLV else
+            IR(20 downto 16) -- inst_grupoI='1' or uins.ULAOp=SLTIU or uins.ULAOp=SLTI 
+         ;                 -- or uins.ULAOp=LW or  uins.ULAOp=LBU  or uins.ULAOp=LUI, or default
+
    IR_OUT <= IR ;    -- IR is the datapath output signal to carry the instruction
 
    -- auxiliary signals 
-   inst_branch1e  <= '1' when controlSignals4e.ULAOp=BEQ or controlSignals4e.ULAOp=BGEZ or
-                             controlSignals4e.ULAOp=BLEZ or controlSignals4e.ULAOp=BNE
-                        else '0';
    inst_branch2e  <= '1' when controlSignals2e.ULAOp=BEQ or controlSignals2e.ULAOp=BGEZ or
                              controlSignals2e.ULAOp=BLEZ or controlSignals2e.ULAOp=BNE
                         else '0';
@@ -74,14 +84,14 @@ ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")
                              controlSignals3e.ULAOp=BLEZ or controlSignals3e.ULAOp=BNE
                         else '0';
                   
+   inst_grupo1e2  <= '1' when controlSignals2e.ULAOp=ADDU or controlSignals2e.ULAOp=NOP or controlSignals2e.ULAOp=SUBU or
+                        controlSignals2e.ULAOp=AAND or controlSignals2e.ULAOp=OOR or controlSignals2e.ULAOp=XXOR or
+                        controlSignals2e.ULAOp=NNOR   else '0';                        
+                        
    inst_grupo1e3  <= '1' when controlSignals3e.ULAOp=ADDU or controlSignals3e.ULAOp=NOP or controlSignals3e.ULAOp=SUBU or
                               controlSignals3e.ULAOp=AAND or controlSignals3e.ULAOp=OOR or controlSignals3e.ULAOp=XXOR or
                               controlSignals3e.ULAOp=NNOR
                          else '0';
-   inst_grupo1e5  <= '1' when controlSignals5e.ULAOp=ADDU or controlSignals5e.ULAOp=NOP or controlSignals5e.ULAOp=SUBU or
-                              controlSignals5e.ULAOp=AAND or controlSignals5e.ULAOp=OOR or controlSignals5e.ULAOp=XXOR or
-                              controlSignals5e.ULAOp=NNOR
-                        else '0';
                 
    -- The then clause is only used for logic shifts with shamt field       
    adS <= IR(20 downto 16) when controlSignals2e.ULAOp=SSLL or controlSignals2e.ULAOp=SSRA or controlSignals2e.ULAOp=SSRL
@@ -137,8 +147,8 @@ ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")
  
    -- evaluation of conditions to take the branch instructions
    salta <=  '1' when ( (RA=RB  and controlSignals3e.ULAOp=BEQ)  or (RA>=0  and controlSignals3e.ULAOp=BGEZ) or
-                        (RA<=0  and controlSignals3e.ULAOp=BLEZ) or (RA/=RB and controlSignals3e.ULAOp=BNE) )  else
-             '0';            
+                        (RA<=0  and controlSignals3e.ULAOp=BLEZ) or (RA/=RB and controlSignals3e.ULAOp=BNE) ) 
+                 else '0';            
              
    --==============================================================================
    -- fourth stage
@@ -173,18 +183,5 @@ ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")
       controlSignalsIN => controlSignals4e,
       controlSignalsOUT => controlSignals5e
    );
-   -- signal to be written into the register bank
-   RIN <= npc1 when (controlSignals5e.ULAOp=JALR or controlSignals5e.ULAOp=JAL) else result;
-   
-   -- register bank write address selection
-   adD <= "11111"               when controlSignals5e.ULAOp=JAL else -- JAL writes in register $31
-         IR(15 downto 11)       when inst_grupo1e5='1' or controlSignals5e.ULAOp=SLTU or controlSignals5e.ULAOp=SLT
-                                                     or controlSignals5e.ULAOp=JALR  
-						     or controlSignals5e.ULAOp=SSLL or controlSignals5e.ULAOp=SLLV
-						     or controlSignals5e.ULAOp=SSRA or controlSignals5e.ULAOp=SRAV
-						     or controlSignals5e.ULAOp=SSRL or controlSignals5e.ULAOp=SRLV
-                                                     else
-         IR(20 downto 16) -- inst_grupoI='1' or uins.ULAOp=SLTIU or uins.ULAOp=SLTI 
-        ;                 -- or uins.ULAOp=LW or  uins.ULAOp=LBU  or uins.ULAOp=LUI, or default
 
 end datapath;

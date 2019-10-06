@@ -22,7 +22,7 @@ architecture MRstd of MRstd is
          port map( ck=>clock, rst=>reset, IR_OUT=>IR, controlSignals2e=>sinaisDeControle, i_address=>i_address, 
                     instruction=>instruction, d_address=>d_address,  data=>data);
     
-    ct: entity work.control_unit  port map(ir=>IR, sinaisDeControle=>sinaisDeControle);
+    ct: entity work.control_unit  port map(ir=>instruction, sinaisDeControle=>sinaisDeControle);
                     
     ce <= sinaisDeControle.ULAFonte;
     rw <= sinaisDeControle.LerMem; 

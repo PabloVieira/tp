@@ -11,17 +11,18 @@ entity erbi is
 end erbi;
 
 architecture erbi of erbi is 
+signal dtpcInit: std_logic;
 begin
 
   process(ck, rst)
   begin
        if rst = '1' then
-        pc <= INIT_VALUE(31 downto 0);
-        elsif ck'event and ck = '1' then
+          pc <= INIT_VALUE(31 downto 0);
+       elsif ck'event and ck = '1' then
           --if ce = '1' then
-            pc <= dtpc;
+           pc <= dtpc;
           --end if;
-        end if;
+       end if;
   end process;
         
 end erbi;
