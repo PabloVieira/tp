@@ -22,7 +22,7 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = '0' then
+        if ck'event and ck = '1' then
           RA <= R1;
           RB <= R2;
           npcOUT <= npcIN;
