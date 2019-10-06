@@ -16,7 +16,7 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = '0' then
+        if ck'event and ck = '1' then
           --if ce = '1' then
             npc <= incpc;
             IR <= instruction;

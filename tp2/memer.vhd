@@ -17,7 +17,7 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = 0' then
+        if ck'event and ck = '0' then
           --if ce = '1' then
             MDR <= mdr_int;
             controlSignalsOUT <= controlSignalsIN;

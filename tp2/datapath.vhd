@@ -29,6 +29,8 @@ begin
    -- first_stage
    --==============================================================================
 
+   i_address <= pc;  -- connects PC output to the instruction memory address bus
+
    incpc <= pc + 4;
    
    BIDI: entity work.bidi port map (
