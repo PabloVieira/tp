@@ -6,7 +6,7 @@ use IEEE.Std_Logic_1164.all;
 use work.p_MRstd.all;
 
 entity control_unit is
-        port(   ir : in std_logic_vector(31 downto 0);
+        port( ir : in std_logic_vector(31 downto 0);
                 sinaisDeControle: out sinalDeControle
              );
 end control_unit;

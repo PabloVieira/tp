@@ -19,8 +19,10 @@ architecture MRstd of MRstd is
  begin
 
      dp: entity work.datapath   
-         port map( ck=>clock, rst=>reset, i_address=>i_address, instruction=>instruction,
-                    d_address=>d_address,  data=>data, controlSignals=>sinaisDeControle);
+         port map( ck=>clock, rst=>reset, IR_OUT=>IR, controlSignals2e=>sinaisDeControle, i_address=>i_address, 
+                    instruction=>instruction, d_address=>d_address,  data=>data);
+    
+    ct: entity work.control_unit  port map(ir=>IR, sinaisDeControle=>sinaisDeControle);
                     
     ce <= sinaisDeControle.ULAFonte;
     rw <= sinaisDeControle.LerMem; 

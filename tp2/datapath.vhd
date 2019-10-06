@@ -13,7 +13,8 @@ entity datapath is
              instruction : in std_logic_vector(31 downto 0);
              d_address :   out std_logic_vector(31 downto 0);
              data :        inout std_logic_vector(31 downto 0);
-             controlSignals: out sinalDeControle
+             IR_OUT :      out std_logic_vector(31 downto 0);
+             controlSignals2e: in sinalDeControle
           );
 end datapath;
 
@@ -21,17 +22,36 @@ architecture datapath of datapath is
     signal incpc, pc, npc1, npc2, IR, result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALU, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
-    signal inst_branch2e, inst_branch3e, inst_branch5e, inst_grupo1e3, inst_grupo1e5: std_logic;   
+    signal inst_branch1e, inst_branch2e, inst_branch3e, inst_grupo1e3, inst_grupo1e5: std_logic;   
     signal salta : std_logic := '0';
-    signal controlSignals2e, controlSignals3e, controlSignals4e, controlSignals5e: sinalDeControle;
+    signal controlSignals3e, controlSignals4e, controlSignals5e: sinalDeControle;
 begin              
    --==============================================================================
    -- first_stage
    --==============================================================================
+   dtpc <= result when (inst_branch1e='1' and salta='1') or controlSignals4e.ULAOp=J    or
+                        controlSignals4e.ULAOp=JAL or controlSignals4e.ULAOp=JALR or controlSignals4e.ULAOp=JR  
+                  else npc2;
+
+-- Code memory starting address: beware of the OFFSET! 
+-- The one below (x"00400000") serves for code generated 
+-- by the MARS simulator
+
+ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")   
+                  port map (
+                      ck => ck,
+                      rst=>rst,
+                      dtpc => dtpc,
+                      pc => pc
+                   );
 
    i_address <= pc;  -- connects PC output to the instruction memory address bus
 
    incpc <= pc + 4;
+   
+   --==============================================================================
+   -- second stage
+   --==============================================================================
    
    BIDI: entity work.bidi port map (
       ck => ck,
@@ -40,21 +60,18 @@ begin
       npc => npc1,
       IR => IR
    );
-   
-   --==============================================================================
-   -- second stage
-   --==============================================================================
-   ct: entity work.control_unit  port map(ir=>IR, sinaisDeControle=>controlSignals2e);
-   
+
+   IR_OUT <= IR ;    -- IR is the datapath output signal to carry the instruction
+
    -- auxiliary signals 
+   inst_branch1e  <= '1' when controlSignals4e.ULAOp=BEQ or controlSignals4e.ULAOp=BGEZ or
+                             controlSignals4e.ULAOp=BLEZ or controlSignals4e.ULAOp=BNE
+                        else '0';
    inst_branch2e  <= '1' when controlSignals2e.ULAOp=BEQ or controlSignals2e.ULAOp=BGEZ or
                              controlSignals2e.ULAOp=BLEZ or controlSignals2e.ULAOp=BNE
                         else '0';
    inst_branch3e  <= '1' when controlSignals3e.ULAOp=BEQ or controlSignals3e.ULAOp=BGEZ or
                              controlSignals3e.ULAOp=BLEZ or controlSignals3e.ULAOp=BNE
-                        else '0';
-   inst_branch5e  <= '1' when controlSignals4e.ULAOp=BEQ or controlSignals4e.ULAOp=BGEZ or
-                             controlSignals4e.ULAOp=BLEZ or controlSignals4e.ULAOp=BNE
                         else '0';
                   
    inst_grupo1e3  <= '1' when controlSignals3e.ULAOp=ADDU or controlSignals3e.ULAOp=NOP or controlSignals3e.ULAOp=SUBU or
@@ -87,7 +104,11 @@ begin
                 -- logic instructions with immediate operand are zero extended
              ext16;
                 -- The default case is used by addiu, lbu, lw, sbu and sw instructions
-
+ 
+  --==============================================================================
+   -- third stage
+   --==============================================================================
+                      
    DIEX: entity work.diex port map (
       ck => ck,
       R1 => R1,
@@ -101,11 +122,7 @@ begin
       controlSignalsIN => controlSignals2e,
       controlSignalsOUT => controlSignals3e
    );
- 
-  --==============================================================================
-   -- third stage
-   --==============================================================================
-                      
+
    -- select the first ALU operand                           
    op1 <= npc2  when inst_branch3e='1' else 
           RA; 
@@ -121,46 +138,41 @@ begin
    -- evaluation of conditions to take the branch instructions
    salta <=  '1' when ( (RA=RB  and controlSignals3e.ULAOp=BEQ)  or (RA>=0  and controlSignals3e.ULAOp=BGEZ) or
                         (RA<=0  and controlSignals3e.ULAOp=BLEZ) or (RA/=RB and controlSignals3e.ULAOp=BNE) )  else
-             '0';
-                 
+             '0';            
+             
+   --==============================================================================
+   -- fourth stage
+   --==============================================================================
+     
    EXMEM: entity work.exmem port map (
       ck => ck,
       outalu => outalu,
       RALU => RALU,
       controlSignalsIN => controlSignals3e,
       controlSignalsOUT => controlSignals4e
-   );
-             
-   --==============================================================================
-   -- fourth stage
-   --==============================================================================
-     
+   );  
+   
    d_address <= RALU;
     
    -- tristate to control memory write    
    data <= RB when (controlSignals4e.ULAFonte='1' and controlSignals4e.LerMem='0') else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
-   mdr_int <= data when controlSignals4e.ULAOp=LW  else x"000000" & data(7 downto 0);
-       
-   --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
+   mdr_int <= data when controlSignals4e.ULAOp=LW  else x"000000" & data(7 downto 0);              
   
-   result <= MDR when controlSignals4e.ULAOp=LW  or controlSignals4e.ULAOp=LBU else RALU;
+   result <= MDR when controlSignals4e.ULAOp=LW  or controlSignals4e.ULAOp=LBU else RALU;  
 
-   controlSignals <= controlSignals4e;
-
+   --==============================================================================
+   -- fifth stage
+   --==============================================================================
+   
    MEMER: entity work.memer port map (
       ck => ck,
       mdr_int => mdr_int,
       MDR => MDR,
       controlSignalsIN => controlSignals4e,
       controlSignalsOUT => controlSignals5e
-   );  
-
-   --==============================================================================
-   -- fifth stage
-   --==============================================================================
-
+   );
    -- signal to be written into the register bank
    RIN <= npc1 when (controlSignals5e.ULAOp=JALR or controlSignals5e.ULAOp=JAL) else result;
    
@@ -174,20 +186,5 @@ begin
                                                      else
          IR(20 downto 16) -- inst_grupoI='1' or uins.ULAOp=SLTIU or uins.ULAOp=SLTI 
         ;                 -- or uins.ULAOp=LW or  uins.ULAOp=LBU  or uins.ULAOp=LUI, or default
-    
-   dtpc <= result when (inst_branch5e='1' and salta='1') or controlSignals5e.ULAOp=J    or controlSignals5e.ULAOp=JAL or controlSignals5e.ULAOp=JALR or controlSignals5e.ULAOp=JR  
-           else npc1;
-   
-   -- Code memory starting address: beware of the OFFSET! 
-   -- The one below (x"00400000") serves for code generated 
-   -- by the MARS simulator
-
-   ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")   
-                          port map (
-                              ck => ck,
-                              rst=>rst,
-                              dtpc => dtpc,
-                              pc => pc
-                           );
 
 end datapath;
