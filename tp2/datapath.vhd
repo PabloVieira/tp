@@ -12,8 +12,8 @@ entity datapath is
              i_address :   out std_logic_vector(31 downto 0);
              instruction : in std_logic_vector(31 downto 0);
              d_address :   out std_logic_vector(31 downto 0);
-             data :        inout std_logic_vector(31 downto 0);  
-             IR_OUT :      out std_logic_vector(31 downto 0)
+             data :        inout std_logic_vector(31 downto 0);
+             controlSignals: out sinalDeControle
           );
 end datapath;
 
@@ -29,6 +29,8 @@ begin
    -- first_stage
    --==============================================================================
 
+   incpc <= pc + 4;
+   
    BIDI: entity work.bidi port map (
       ck => ck,
       incpc => incpc,
@@ -103,11 +105,11 @@ begin
    --==============================================================================
                       
    -- select the first ALU operand                           
-   op1 <= npc  when inst_branch3e='1' else 
+   op1 <= npc2  when inst_branch3e='1' else 
           RA; 
      
    -- select the second ALU operand
-   op2 <= RB when inst_grupo1='1' or controlSignals3e.ULAOp=SLTU or controlSignals3e.ULAOp=SLT or controlSignals3e.ULAOp=JR 
+   op2 <= RB when inst_grupo1e3='1' or controlSignals3e.ULAOp=SLTU or controlSignals3e.ULAOp=SLT or controlSignals3e.ULAOp=JR 
                   or controlSignals3e.ULAOp=SLLV or controlSignals3e.ULAOp=SRAV or controlSignals3e.ULAOp=SRLV
                   else IMED; 
                  
@@ -134,7 +136,7 @@ begin
    d_address <= RALU;
     
    -- tristate to control memory write    
-   data <= RB when (controlSignals4e.ce='1' and controlSignals4e.rw='0') else (others=>'Z');  
+   data <= RB when (controlSignals4e.ULAFonte='1' and controlSignals4e.LerMem='0') else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
    mdr_int <= data when controlSignals4e.ULAOp=LW  else x"000000" & data(7 downto 0);
@@ -142,6 +144,8 @@ begin
    --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
   
    result <= MDR when controlSignals4e.ULAOp=LW  or controlSignals4e.ULAOp=LBU else RALU;
+
+   controlSignals <= controlSignals4e;
 
    MEMER: entity work.memer port map (
       ck => ck,
@@ -156,11 +160,11 @@ begin
    --==============================================================================
 
    -- signal to be written into the register bank
-   RIN <= npc when (controlSignals5e.ULAOp=JALR or controlSignals5e.ULAOp=JAL) else result;
+   RIN <= npc1 when (controlSignals5e.ULAOp=JALR or controlSignals5e.ULAOp=JAL) else result;
    
    -- register bank write address selection
    adD <= "11111"               when controlSignals5e.ULAOp=JAL else -- JAL writes in register $31
-         IR(15 downto 11)       when inst_grupo1='1' or controlSignals5e.ULAOp=SLTU or controlSignals5e.ULAOp=SLT
+         IR(15 downto 11)       when inst_grupo1e5='1' or controlSignals5e.ULAOp=SLTU or controlSignals5e.ULAOp=SLT
                                                      or controlSignals5e.ULAOp=JALR  
 						     or controlSignals5e.ULAOp=SSLL or controlSignals5e.ULAOp=SLLV
 						     or controlSignals5e.ULAOp=SSRA or controlSignals5e.ULAOp=SRAV
@@ -170,16 +174,18 @@ begin
         ;                 -- or uins.ULAOp=LW or  uins.ULAOp=LBU  or uins.ULAOp=LUI, or default
     
    dtpc <= result when (inst_branch5e='1' and salta='1') or controlSignals5e.ULAOp=J    or controlSignals5e.ULAOp=JAL or controlSignals5e.ULAOp=JALR or controlSignals5e.ULAOp=JR  
-           else npc;
+           else npc1;
    
    -- Code memory starting address: beware of the OFFSET! 
    -- The one below (x"00400000") serves for code generated 
    -- by the MARS simulator
 
-   ERBI: entity work.erbi port map (
-      ck => ck,
-      dtpc => dtpc,
-      pc => pc
-   );
+   ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")   
+                          port map (
+                              ck => ck,
+                              rst=>rst,
+                              dtpc => dtpc,
+                              pc => pc
+                           );
 
 end datapath;

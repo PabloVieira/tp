@@ -26,7 +26,7 @@ package p_MRstd is
     end record;
 
     type sinalDeControle is record
-        RegDest: std_logic;
+        RegDst: std_logic;
         ULAFonte: std_logic;
         ULAOp: inst_type;
         DvC: std_logic;

@@ -223,7 +223,7 @@ begin
    -- first_stage
    --==============================================================================
   
-   incpc <= pc + 4;
+      
   
    RNPC: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>incpc,       Q=>npc);     
            

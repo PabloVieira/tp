@@ -9,12 +9,6 @@ entity memer is
 
                 controlSignalsIN: in sinalDeControle;
                 controlSignalsOUT: out sinalDeControle
-                --controle
---                MemParaRegIN: in std_logic;
---                EscRegIN: in std_logic;
---
---                MemParaRegOUT: out std_logic;
---                EscRegOUT: out std_logic
                );
 end memer;
 
@@ -23,13 +17,10 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = '0' then
+        if ck'event and ck = 0' then
           --if ce = '1' then
             MDR <= mdr_int;
             controlSignalsOUT <= controlSignalsIN;
-            --controle
---            MemParaRegOUT <= MemParaRegIN;
---            EscRegOUT <= EscRegIN;
           --end if;
         end if;
   end process;

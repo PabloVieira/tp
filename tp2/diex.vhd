@@ -25,7 +25,7 @@ begin
         if ck'event and ck = '0' then
           RA <= R1;
           RB <= R2;
-          npc <= npcIN;
+          npcOUT <= npcIN;
           IMED <= cte_im;
           controlSignalsOUT <= controlSignalsIN;
         end if;

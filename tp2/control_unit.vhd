@@ -66,14 +66,14 @@ begin
                                              i=XXOR or
                                              i=NNOR or
                                              i=NNOR or
-                                             i=SSL or
-                                             i=SSLV or
+                                             i=SSLL or
+                                             i=SLLV or
                                              i=SSRA or
                                              i=SRAV or
                                              i=SSRL or
                                              i=SRLV or
                                              i=ADDIU or
-                                             i=OORI or
+                                             i=ORI or
                                              i=XORI    else '0';
 
         sinaisDeControle.ULAOp <=  i;                                   
@@ -99,7 +99,7 @@ begin
 
         sinaisDeControle.LerMem	<= '1' when i=LUI or
                                             i=LBU or
-                                            i=LW or    else '0';
+                                            i=LW    else '0';
 
         sinaisDeControle.EscMem	<= '1' when i=SB or i=SW      else '0';
 
