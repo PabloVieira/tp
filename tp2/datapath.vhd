@@ -67,6 +67,7 @@ begin
    --==============================================================================
    BIDI: entity work.bidi port map (
     ck => ck,
+    rst=>rst,
     incpc => incpc,
     instruction => instruction,
     npc => npc2,
