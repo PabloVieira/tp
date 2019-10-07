@@ -6,9 +6,10 @@ entity exmem is
            port(  ck : in std_logic;
                 outalu: in std_logic_vector(31 downto 0);
                 RALU: out std_logic_vector(31 downto 0);
-
-                controlSignalsIN: in sinalDeControle;
-                controlSignalsOUT: out sinalDeControle
+                  --controlSignalsIN: in sinalDeControle;
+                  --controlSignalsOUT: out sinalDeControle
+                  controlSignalsIN: in microinstruction;
+                  controlSignalsOUT: out microinstruction
                );
 end exmem;
 
@@ -17,7 +18,7 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = '1' then
+        if ck'event and ck = '0' then
           --if ce = '1' then
             RALU <= outalu;
             controlSignalsOUT <= controlSignalsIN;

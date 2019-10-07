@@ -1,29 +1,25 @@
 --------------------------------------------------------------------------
 --  Control Unit behavioral description 
 --------------------------------------------------------------------------
---------------------------------------------------------------------------
 library IEEE;
 use IEEE.Std_Logic_1164.all;
 use work.p_MRstd.all;
 
 entity control_unit is
-        port(   ck, rst : in std_logic;          
-                uins : out microinstruction;
-                ir : in std_logic_vector(31 downto 0)
+        port( ir : in std_logic_vector(31 downto 0);
+                sinaisDeControle: out sinalDeControle
              );
 end control_unit;
                    
 architecture control_unit of control_unit is
-   type type_state is (Sidle, Sfetch, Sreg, Salu, Swbk, Sld, Sst, Ssalta);
-   signal PS, NS : type_state;
    signal i : inst_type;      
-begin
-      
+begin      
     ----------------------------------------------------------------------------------------
     -- BLOCK (1/3) - INSTRUCTION DECODING and ALU operation definition.
     -- This block generates 1 Output Function of the Control Unit
     ----------------------------------------------------------------------------------------
     i <=   ADDU   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100001" else
+           NOP    when ir(31 downto 26)="000000" and ir(10 downto 0)="00000000000" else
            SUBU   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100011" else
            AAND   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100100" else
            OOR    when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100101" else
@@ -61,35 +57,69 @@ begin
         
     assert i /= invalid_instruction
           report "******************* INVALID INSTRUCTION *************"
-          severity error;
-                   
-    uins.i <= i;    -- this instructs the alu to execute its expected operation, if any
-  
-    uins.wreg <= '0' when i=SW or
-                                        i=SB or
-                                        i=SLT or
-                                        i=SLTU or
-                                        i=SLTI or
-                                        i=SLTIU or
-                                        i=BEQ or
-                                        i=BGEZ or
-                                        i=BLEZ or
-                                        i=BNE or
-                                        i=J or
-                                        i=JAL or
-                                        i=JALR or
-                                        i=JR       else '1'; 
-   
-    uins.rw	<= '1' when i=LUI or
-                        i=LBU or
-                        i=LW    else '0';
-                  
-    uins.ce <= '1' when i=LUI or
-                        i=LBU or
-                        i=LW or
-                        i=SB or
-                        i=SW     else '0';
+          severity error;                   
     
-    uins.bw    <= '0' when i=SB   else '1';
+        sinaisDeControle.RegDst  <= '1' when i=ADDU or
+                                             i=SUBU or
+                                             i=AAND or
+                                             i=OOR or
+                                             i=XXOR or
+                                             i=NNOR or
+                                             i=SSLL or
+                                             i=SLLV or
+                                             i=SSRA or
+                                             i=SRAV or
+                                             i=SSRL or
+                                             i=SRLV or
+                                             i=ADDIU or
+                                             i=ANDI or
+                                             i=ORI or
+                                             i=XORI    else '0';
+
+        sinaisDeControle.ULAOp <=  i;                                   
+
+        sinaisDeControle.ULAFonte <= '1' when i=LUI or
+                                              i=LBU or
+                                              i=LW or
+                                              i=SB or
+                                              i=SW     else '0';
+
+        sinaisDeControle.DvC <= '1' when i=SLT or
+                                         i=SLTU or
+                                         i=SLTI or
+                                         i=SLTIU or
+                                         i=BEQ or
+                                         i=BGEZ or
+                                         i=BLEZ or
+                                         i=BNE or
+                                         i=J or
+                                         i=JAL or
+                                         i=JALR or
+                                         i=JR     else '0';
+
+        sinaisDeControle.LerMem	<= '1' when i=LUI or
+                                            i=LBU or
+                                            i=LW    else '0';
+
+        sinaisDeControle.EscMem	<= '1' when i=SB or i=SW      else '0';
+
+        sinaisDeControle.EscReg <= '0' when i=SW or
+                                            i=SB or
+                                            i=SLT or
+                                            i=SLTU or
+                                            i=SLTI or
+                                            i=SLTIU or
+                                            i=BEQ or
+                                            i=BGEZ or
+                                            i=BLEZ or
+                                            i=BNE or
+                                            i=J or
+                                            i=JAL or
+                                            i=JALR or
+                                            i=JR       else '1';  
+            
+        sinaisDeControle.MemParaReg  <= '1' when i=LUI or
+                                                 i=LBU or
+                                                 i=LW       else '0';
     
 end control_unit;

@@ -6,9 +6,10 @@ entity memer is
            port(  ck : in std_logic;
                 mdr_int: in std_logic_vector(31 downto 0);
                 MDR: out std_logic_vector(31 downto 0);
-
-                controlSignalsIN: in sinalDeControle;
-                controlSignalsOUT: out sinalDeControle
+                  --controlSignalsIN: in sinalDeControle;
+                  --controlSignalsOUT: out sinalDeControle
+                  controlSignalsIN: in microinstruction;
+                  controlSignalsOUT: out microinstruction
                );
 end memer;
 
@@ -17,7 +18,7 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = '1' then
+        if ck'event and ck = '0' then
           --if ce = '1' then
             MDR <= mdr_int;
             controlSignalsOUT <= controlSignalsIN;

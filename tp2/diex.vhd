@@ -12,8 +12,10 @@ entity diex is
                   IMED: out std_logic_vector(31 downto 0);
                   npcIN: in std_logic_vector(31 downto 0);
                   npcOUT: out std_logic_vector(31 downto 0);
-                  controlSignalsIN: in sinalDeControle;
-                  controlSignalsOUT: out sinalDeControle
+                  --controlSignalsIN: in sinalDeControle;
+                  --controlSignalsOUT: out sinalDeControle
+                  controlSignalsIN: in microinstruction;
+                  controlSignalsOUT: out microinstruction
                );
 end diex;
 
@@ -22,7 +24,7 @@ begin
 
   process(ck)
   begin
-        if ck'event and ck = '1' then
+        if ck'event and ck = '0' then
           RA <= R1;
           RB <= R2;
           npcOUT <= npcIN;
