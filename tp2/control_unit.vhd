@@ -24,6 +24,7 @@ begin
     -- This block generates 1 Output Function of the Control Unit
     ----------------------------------------------------------------------------------------
     i <=   ADDU   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100001" else
+           NOP    when ir(31 downto 26)="000000" and ir(10 downto 0)="00000000000" else
            SUBU   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100011" else
            AAND   when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100100" else
            OOR    when ir(31 downto 26)="000000" and ir(10 downto 0)="00000100101" else
