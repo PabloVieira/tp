@@ -2,9 +2,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use work.p_MRstd.all;
 
-entity bidi is
-            generic( INIT_VALUE : STD_LOGIC_VECTOR(31 downto 0) := (others=>'0') );
-            port(  ck : in std_logic;
+entity bidi is port(  ck : in std_logic;
                 incpc: in std_logic_vector(31 downto 0);
                 instruction: in std_logic_vector(31 downto 0);
                 npc: out std_logic_vector(31 downto 0);

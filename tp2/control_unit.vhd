@@ -65,20 +65,20 @@ begin
                    
     uins.i <= i;    -- this instructs the alu to execute its expected operation, if any
   
-    uins.wreg <= '0' when i=SW or
-                                        i=SB or
-                                        i=SLT or
-                                        i=SLTU or
-                                        i=SLTI or
-                                        i=SLTIU or
-                                        i=BEQ or
-                                        i=BGEZ or
-                                        i=BLEZ or
-                                        i=BNE or
-                                        i=J or
-                                        i=JAL or
-                                        i=JALR or
-                                        i=JR       else '1'; 
+    uins.wreg <= '0' when  i=SW or
+                           i=SB or
+                           i=SLT or
+                           i=SLTU or
+                           i=SLTI or
+                           i=SLTIU or
+                           i=BEQ or
+                           i=BGEZ or
+                           i=BLEZ or
+                           i=BNE or
+                           i=J or
+                           i=JAL or
+                           i=JALR or
+                           i=JR       else '1'; 
    
     uins.rw	<= '1' when i=LUI or
                         i=LBU or

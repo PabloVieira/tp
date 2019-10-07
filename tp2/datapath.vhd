@@ -44,13 +44,12 @@ begin
    --==============================================================================
    -- first_stage
    --==============================================================================
-   ERBI: entity work.erbi generic map(INIT_VALUE=>x"00400000")   
-                  port map (
-                      ck => ck,
-                      rst=>rst,
-                      dtpc => dtpc,
-                      pc => pc
-                   );
+   ERBI: entity work.erbi port map (
+                              ck => ck,
+                              rst=>rst,
+                              dtpc => dtpc,
+                              pc => pc
+                           );
   
    incpc <= pc + 4;
   
@@ -75,11 +74,11 @@ begin
  );
                 
    -- The then clause is only used for logic shifts with shamt field       
-   adS <= IR(20 downto 16) when uins2.i=SSLL or uins2.i=SSRA or uins2.i=SSRL else 
+   adS <= IR(20 downto 16) when uins5.i=SSLL or uins5.i=SSRA or uins5.i=SSRL else 
           IR(25 downto 21);
           
    REGS: entity work.reg_bank(reg_bank) port map
-        (ck=>ck, rst=>rst, wreg=>uins2.wreg, AdRs=>adS, AdRt=>IR(20 downto 16), adRD=>adD,  
+        (ck=>ck, rst=>rst, wreg=>uins5.wreg, AdRs=>adS, AdRt=>IR(20 downto 16), adRD=>adD,  
          Rd=>RIN, R1=>R1, R2=>R2);
     
    -- sign extension 
@@ -122,13 +121,12 @@ begin
    );
                       
    -- select the first ALU operand                           
-   op1 <= npc3  when inst_branch3='1' else 
-          RA; 
+   op1 <= npc3  when inst_branch3='1' else RA; 
      
    -- select the second ALU operand
    op2 <= RB when inst_grupo1e3='1' or uins3.i=SLTU or uins3.i=SLT or uins3.i=JR 
-                  or uins3.i=SLLV or uins3.i=SRAV or uins3.i=SRLV else 
-          IMED; 
+                  or uins3.i=SLLV or uins3.i=SRAV or uins3.i=SRLV
+                  else  IMED; 
                  
    -- ALU instantiation
    inst_alu: entity work.alu port map (op1=>op1, op2=>op2, outalu=>outalu, op_alu=>uins3.i);
@@ -184,17 +182,15 @@ begin
    
    -- register bank write address selection
    adD <= "11111"               when uins2.i=JAL else -- JAL writes in register $31
-         IR(15 downto 11)       when inst_grupo1e2='1' or uins2.i=SLTU or uins2.i=SLT
-                                                     or uins2.i=JALR  
-						     or uins2.i=SSLL or uins2.i=SLLV
-						     or uins2.i=SSRA or uins2.i=SRAV
-						     or uins2.i=SSRL or uins2.i=SRLV
-                                                     else
+         IR(15 downto 11)       when inst_grupo1e2='1' or uins2.i=SLTU or uins2.i=SLT or uins2.i=JALR or
+                                     uins2.i=SSLL or uins2.i=SLLV or uins2.i=SSRA or uins2.i=SRAV or
+						                   uins2.i=SSRL or uins2.i=SRLV
+                                else
          IR(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
         ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
     
    dtpc <= result when (inst_branch5='1' and salta='1') or uins3.i=J    or uins3.i=JAL or uins3.i=JALR or uins3.i=JR  
-           else npc2;
+                  else incpc;--npc2;
    
    -- Code memory starting address: beware of the OFFSET! 
    -- The one below (x"00400000") serves for code generated 
