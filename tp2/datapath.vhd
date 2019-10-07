@@ -191,7 +191,7 @@ begin
         ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
     
    dtpc <= result when (inst_branch5='1' and salta='1') or uins3.i=J    or uins3.i=JAL or uins3.i=JALR or uins3.i=JR  
-                  else incpc;--npc2;
+                  else npc2;
    
    -- Code memory starting address: beware of the OFFSET! 
    -- The one below (x"00400000") serves for code generated 
