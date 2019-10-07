@@ -10,8 +10,8 @@ entity diex is
                   RA: out std_logic_vector(31 downto 0);
                   RB: out std_logic_vector(31 downto 0);
                   IMED: out std_logic_vector(31 downto 0);
-                  --npcIN: in std_logic_vector(31 downto 0);
-                  --npcOUT: out std_logic_vector(31 downto 0);
+                  npcIN: in std_logic_vector(31 downto 0);
+                  npcOUT: out std_logic_vector(31 downto 0);
                   --controlSignalsIN: in sinalDeControle;
                   --controlSignalsOUT: out sinalDeControle
                   controlSignalsIN: in microinstruction;
@@ -27,7 +27,7 @@ begin
     if ck'event and ck = '0' then
           RA <= R1;
           RB <= R2;
-         -- npcOUT <= npcIN;
+          npcOUT <= npcIN;
           IMED <= cte_im;
           controlSignalsOUT <= controlSignalsIN;
         end if;
