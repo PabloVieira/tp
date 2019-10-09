@@ -16,7 +16,7 @@ begin
   process(ck, rst)
   begin
     if rst = '1' then
-      npc <= x"00400004";
+      npc <= x"00400000";
     elsif ck'event and ck = '0' then
           --if ce = '1' then
             npc <= incpc;

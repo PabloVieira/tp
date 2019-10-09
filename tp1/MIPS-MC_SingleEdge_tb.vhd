@@ -9,6 +9,35 @@
 --
 -- This testbench employs two memories, implying a HARVARD organization
 --
+-- Changes:
+--	16/05/2012 (Ney Calazans)
+--		- Corrected bug in memory filling during reset. The instruction
+--		memory fill process, makes the processor produce "ce" signals to 
+--		memory which ended up by filling data memory with rubbish at
+--		the same time. To solve this, the first line of the data memory
+--		Dce control signal generation was changed from 
+--			--	ce='1' or go_d='1'	 to 
+--			-- (ce='1' and rstCPU/='1') or go_d='1'
+--		- Also, there was a problem with the data memory write operation in
+--		monocycle MIPS implementations: when multiple SW instructions
+--		were issued one after the other, the write operation was executed
+--		in two sets of memory positions at once after the first SW. To
+--		solve this the data signal was removed from the memory write
+--		process sensitivity list.
+--	10/10/2015 (Ney Calazans)
+--		- Signal bw from memory set to '1', since the CPU
+--		does not generate it anymore.
+--	28/10/2016 (Ney Calazans)
+--		- Also, regX defs were changed to wiresX, to improve
+--		code readability.
+--	02/06/2017 (Ney Calazans) - bugfix
+--		- tmp_address changed to int_address in the memory definition
+--		-IN the definition of the memory read/write processes,
+--		  CONV_INTEGER(low_address+3)<=MEMORY_SIZE was changed to
+--		  CONV_INTEGER(low_address)<=MEMORY_SIZE-3
+-- 		This avoids an error that freezes the simulation when the
+--		   ALU contains a large number (>65533) in its output 
+--		   immediately before an LW or SW instruction.
 -------------------------------------------------------------------------
 
 library IEEE;
@@ -16,14 +45,14 @@ use IEEE.Std_Logic_1164.all;
 use std.textio.all;
 package aux_functions is  
 
-   subtype reg32  is std_logic_vector(31 downto 0);
-   subtype reg16  is std_logic_vector(15 downto 0);
-   subtype reg8   is std_logic_vector( 7 downto 0);
-   subtype reg4   is std_logic_vector( 3 downto 0);
+   subtype wires32  is std_logic_vector(31 downto 0);
+   subtype wires16  is std_logic_vector(15 downto 0);
+   subtype wires8   is std_logic_vector( 7 downto 0);
+   subtype wires4   is std_logic_vector( 3 downto 0);
 
    -- defini��o do tipo 'memory', que ser� utilizado para as mem�rias de dados/instru��es
    constant MEMORY_SIZE : integer := 2048;     
-   type memory is array (0 to MEMORY_SIZE) of reg8;
+   type memory is array (0 to MEMORY_SIZE) of wires8;
 
    constant TAM_LINHA : integer := 200;
    
@@ -39,7 +68,7 @@ package body aux_functions is
   -- converte um caracter de uma dada linha em um std_logic_vector
   --
   function CONV_VECTOR( letra:string(1 to TAM_LINHA);  pos: integer ) return std_logic_vector is         
-     variable bin: reg4;
+     variable bin: wires4;
    begin
       case (letra(pos)) is  
               when '0' => bin := "0000";
@@ -100,23 +129,23 @@ use std.textio.all;
 use work.aux_functions.all;
 
 entity RAM_mem is
-      generic(  START_ADDRESS: reg32 := (others=>'0')  );
-      port( ce_n, we_n, oe_n, bw: in std_logic;    address: in reg32;   data: inout reg32);
+      generic(  START_ADDRESS: wires32 := (others=>'0')  );
+      port( ce_n, we_n, oe_n, bw: in std_logic;    address: in wires32;   data: inout wires32);
 end RAM_mem;
 
 architecture RAM_mem of RAM_mem is 
    signal RAM : memory;
-   signal tmp_address: reg32;
-   alias  low_address: reg16 is tmp_address(15 downto 0);    --  baixa para 16 bits devido ao CONV_INTEGER --
+   signal tmp_address: wires32;
+   alias  low_address: wires16 is tmp_address(15 downto 0);    --  baixa para 16 bits devido ao CONV_INTEGER --
 begin     
 
    tmp_address <= address - START_ADDRESS;   --  offset do endere�amento  -- 
    
    -- writes in memory ASYNCHRONOUSLY  -- LITTLE ENDIAN -------------------
-   process(ce_n, we_n, low_address, data)
+   process(ce_n, we_n, low_address) -- Modification in 16/05/2012 for monocycle processors only,
      begin
        if ce_n='0' and we_n='0' then
-          if CONV_INTEGER(low_address)>=0 and CONV_INTEGER(low_address+3)<=MEMORY_SIZE then
+          if CONV_INTEGER(low_address)>=0 and CONV_INTEGER(low_address)<=MEMORY_SIZE-3 then
                if bw='1' then
                    RAM(CONV_INTEGER(low_address+3)) <= data(31 downto 24);
                    RAM(CONV_INTEGER(low_address+2)) <= data(23 downto 16);
@@ -131,7 +160,7 @@ begin
    process(ce_n, oe_n, low_address)
      begin
        if ce_n='0' and oe_n='0' and
-          CONV_INTEGER(low_address)>=0 and CONV_INTEGER(low_address+3)<=MEMORY_SIZE then
+          CONV_INTEGER(low_address)>=0 and CONV_INTEGER(low_address)<=MEMORY_SIZE-3 then
             data(31 downto 24) <= RAM(CONV_INTEGER(low_address+3));
             data(23 downto 16) <= RAM(CONV_INTEGER(low_address+2));
             data(15 downto  8) <= RAM(CONV_INTEGER(low_address+1));
@@ -161,12 +190,12 @@ end CPU_tb;
 architecture cpu_tb of cpu_tb is
     
     signal Dadress, Ddata, Iadress, Idata,
-           i_cpu_address, d_cpu_address, data_cpu, tb_add, tb_data : reg32 := (others => '0' );
+           i_cpu_address, d_cpu_address, data_cpu, tb_add, tb_data : wires32 := (others => '0' );
     
     signal Dce_n, Dwe_n, Doe_n, Ice_n, Iwe_n, Ioe_n, ck, rst, rstCPU, 
            go_i, go_d, ce, rw, bw: std_logic;
     
-    file ARQ : TEXT open READ_MODE is "txt\prog2.txt";
+    file ARQ : TEXT open READ_MODE is "soma_cte.txt";
  
 begin
            
@@ -179,7 +208,7 @@ begin
                port map (ce_n=>Ice_n, we_n=>Iwe_n, oe_n=>Ioe_n, bw=>'1', address=>Iadress, data=>Idata);
         
     -- data memory signals --------------------------------------------------------
-    Dce_n <= '0' when  ce='1' or go_d='1'             else '1';
+    Dce_n <= '0' when (ce='1' and rstCPU/='1') or go_d='1' else '1'; -- Bug corrected here in 16/05/2012
     Doe_n <= '0' when (ce='1' and rw='1')             else '1';       
     Dwe_n <= '0' when (ce='1' and rw='0') or go_d='1' else '1';    
 
@@ -197,7 +226,7 @@ begin
     Idata   <= tb_data when rstCPU='1' else (others => 'Z'); 
   
 
-    cpu: entity work.MRstd  port map(
+    cpu: entity work.MIPS_MCS  port map(
               clock=>ck, reset=>rstCPU,
               i_address => i_cpu_address,
               instruction => Idata,
@@ -206,7 +235,7 @@ begin
               data => data_cpu
         ); 
 
-    rst <='1', '0' after 25 ns;       -- generates the reset signal 
+    rst <='1', '0' after 15 ns;       -- generates the reset signal 
 
     process                          -- generates the clock signal 
         begin
@@ -300,8 +329,8 @@ begin
             
         end loop;                        -- FINAL DA LEITURA DO ARQUIVO CONTENDO INSTRU��O E DADOS -----
         
-        rstCPU <= '0';   -- release the processor to execute
-        wait for 2 ns;   -- To activate the RST CPU signal
+        rstCPU <= '0' after 2 ns;   -- release the processor to execute
+        wait for 4 ns;   -- To activate the RST CPU signal
         wait until rst = '1';  -- to Hold again!
         
     end process;

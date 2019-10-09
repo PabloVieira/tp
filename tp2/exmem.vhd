@@ -6,8 +6,6 @@ entity exmem is
            port(  ck : in std_logic;
                 outalu: in std_logic_vector(31 downto 0);
                 RALU: out std_logic_vector(31 downto 0);
-                  --controlSignalsIN: in sinalDeControle;
-                  --controlSignalsOUT: out sinalDeControle
                   controlSignalsIN: in microinstruction;
                   controlSignalsOUT: out microinstruction
                );
