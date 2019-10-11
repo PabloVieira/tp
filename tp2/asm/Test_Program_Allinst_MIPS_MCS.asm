@@ -147,6 +147,9 @@ loop:	blez	$t1,end_add	# se/quando tamanho é/torna-se 0, fim do processamento
 	addiu	$t0,$t0,4	# atualiza ponteiro do vetor. Lembrar, 1 palavra=4 posições de memória
 	addiu	$t1,$t1,-1	# decrementa contador de tamanho do vetor
 	j	loop		# continua execução
+	nop
+	nop
+	nop
 ########################################
 # teste de subrotinas aninhadas
 ########################################
