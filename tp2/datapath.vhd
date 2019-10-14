@@ -150,19 +150,23 @@ begin
       uinsEX => uinsEX,
       uinsMEM => uinsMEM
    );
+
+   
+
+   uinsMEMout <= uinsMEM;
      
    d_address <= RALU;
     
    -- tristate to control memory write    
-   data <= RB when  uinsEX.rw='0' else (others=>'Z');  
+   data <= RB when  uinsMEM.rw='0' else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
-   mdr_int <= data when uinsEX.i=LW  else
+   mdr_int <= data when uinsMEM.i=LW  else
               x"000000" & data(7 downto 0);
        
    --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
   
-   result <=    MDR when uinsEX.i=LW  or uinsEX.i=LBU else
+   result <=    MDR when uinsMEM.i=LW  or uinsMEM.i=LBU else
                 RALU;
 
    --==============================================================================

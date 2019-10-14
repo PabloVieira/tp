@@ -15,12 +15,15 @@ main:
         nop
         nop
         nop
+        nop
         lw      $t1,0($t1)      # o registrador $t1 contém o tamanho do vetor
         la      $t2,const       # obtém o endereço da constante const
-        lw      $t2,0($t2)      # o registrador $t2 contém a constante a somar
         nop
+        nop
+        nop
+        nop
+        lw      $t2,0($t2)      # o registrador $t2 contém a constante a somar
 loop:   blez    $t1,end         # se o tamanho chega a 0, fim do processamento
-	nop
 	nop
 	nop
 	nop
@@ -28,7 +31,9 @@ loop:   blez    $t1,end         # se o tamanho chega a 0, fim do processamento
         nop
         nop
         nop
+        nop
         addu    $t3,$t3,$t2     # soma a constante
+        nop
         nop
         nop
         nop
@@ -38,15 +43,14 @@ loop:   blez    $t1,end         # se o tamanho chega a 0, fim do processamento
         addiu   $t1,$t1,-1      # decrementa o contador de tamanho do vetor
         nop
         nop
-        j       loop            # continua a execução
         nop
+        j       loop            # continua a execução
         nop
         nop
         nop
         
         # Agora volta para o programa monitor
-end:    li	$v0,10		# prepara chamada do sistema para finalizar programa
-	syscall			# fim do programa
+end:    nop 
 
         .data                   # Diretiva para o montador - adiciona o que vem abaixo
         			# 	à memória de dados do processador

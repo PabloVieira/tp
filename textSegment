@@ -7,7 +7,7 @@
 0x00400010  0x00000000  nop                   15           nop
 0x00400014  0x00000000  nop                   16           nop
 0x00400018  0x00000000  nop                   17           nop
-0x0040001c  0x00000000  nop                   18           nop     
+0x0040001c  0x00000000  nop                   18           nop
 0x00400020  0x8d290000  lw $9,0x00000000($9)  19           lw      $t1,0($t1)      # o registrador $t1 contém o tamanho do vetor
 0x00400024  0x3c011001  lui $1,0x00001001     20           la      $t2,const       # obtém o endereço da constante const
 0x00400028  0x342a0030  ori $10,$1,0x00000030      
@@ -16,7 +16,7 @@
 0x00400034  0x00000000  nop                   23           nop
 0x00400038  0x00000000  nop                   24           nop
 0x0040003c  0x8d4a0000  lw $10,0x00000000($10)25           lw      $t2,0($t2)      # o registrador $t2 contém a constante a somar
-0x00400040  0x19200015  blez $9,0x00000015    26   loop:   blez    $t1,end         # se o tamanho chega a 0, fim do processamento
+0x00400040  0x19200017  blez $9,0x00000017    26   loop:   blez    $t1,end         # se o tamanho chega a 0, fim do processamento
 0x00400044  0x00000000  nop                   27   	nop
 0x00400048  0x00000000  nop                   28   	nop
 0x0040004c  0x00000000  nop                   29   	nop
@@ -33,10 +33,11 @@
 0x00400078  0xad0b0000  sw $11,0x00000000($8) 40           sw      $t3,0($t0)      # atualiza o vetor
 0x0040007c  0x25080004  addiu $8,$8,0x0000000441           addiu   $t0,$t0,4       # atualiza o apontador do vetor
 0x00400080  0x2529ffff  addiu $9,$9,0xffffffff43           addiu   $t1,$t1,-1      # decrementa o contador de tamanho do vetor
-0x00400084  0x08100010  j 0x00400040          44           j       loop            # continua a execução
+0x00400084  0x00000000  nop                   44           nop
 0x00400088  0x00000000  nop                   45           nop
 0x0040008c  0x00000000  nop                   46           nop
-0x00400090  0x00000000  nop                   47           nop
+0x00400090  0x08100010  j 0x00400040          47           j       loop            # continua a execução
 0x00400094  0x00000000  nop                   48           nop
-0x00400098  0x2402000a  addiu $2,$0,0x0000000a51   end:    li	$v0,10		# prepara chamada do sistema para finalizar programa
-0x0040009c  0x0000000c  syscall               52   	syscall			# fim do programa
+0x00400098  0x00000000  nop                   49           nop
+0x0040009c  0x00000000  nop                   50           nop
+0x004000a0  0x00000000  nop                   53   end:    nop 
