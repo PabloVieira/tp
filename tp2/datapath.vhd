@@ -1,6 +1,5 @@
 -- Datapath structural description
 --++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
---++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 library IEEE;
 use IEEE.Std_Logic_1164.all;
 use IEEE.Std_Logic_signed.all; -- needed for comparison instructions SLTxx
@@ -13,73 +12,71 @@ entity datapath is
              instruction : in std_logic_vector(31 downto 0);
              d_address :   out std_logic_vector(31 downto 0);
              data :        inout std_logic_vector(31 downto 0);  
-             uins2 :        in microinstruction;
-             IR_OUT :      out std_logic_vector(31 downto 0)
+             uinsMEMout :     out microinstruction
           );
 end datapath;
 
 architecture datapath of datapath is
-    signal incpc, pc, npc2, npc3, IR,  result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
+    signal incpc, pc, npcBI, npcDI, npcEX, IR,  result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALU, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
-    signal inst_branch2, inst_branch3, inst_branch5, inst_grupo1e2, inst_grupo1e3, inst_grupoI: std_logic;   
+    signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX, inst_grupoI: std_logic;   
     signal salta : std_logic := '0';
-    signal uins3, uins4, uins5 : microinstruction;
+    signal wpc: std_logic := '1';
+    signal uinsDI, uinsEX, uinsMEM, uinsER : microinstruction;
 begin
 
    -- auxiliary signals 
-   inst_branch2  <= '1' when uins2.i=BEQ or uins2.i=BGEZ or uins2.i=BLEZ or uins2.i=BNE else 
+   inst_branchDI  <= '1' when uinsDI.i=BEQ or uinsDI.i=BGEZ or uinsDI.i=BLEZ or uinsDI.i=BNE else 
                   '0';
-   inst_branch3  <= '1' when uins3.i=BEQ or uins3.i=BGEZ or uins3.i=BLEZ or uins3.i=BNE else 
+   inst_branchEX  <= '1' when uinsEX.i=BEQ or uinsEX.i=BGEZ or uinsEX.i=BLEZ or uinsEX.i=BNE else 
                   '0';
-   inst_branch5  <= '1' when uins5.i=BEQ or uins5.i=BGEZ or uins5.i=BLEZ or uins5.i=BNE else 
+   inst_branchMEM  <= '1' when uinsMEM.i=BEQ or uinsMEM.i=BGEZ or uinsMEM.i=BLEZ or uinsMEM.i=BNE else 
                   '0';
-   inst_grupo1e2  <= '1' when uins2.i=ADDU or uins2.i=SUBU or uins2.i=AAND
-                  or uins2.i=OOR or uins2.i=XXOR or uins2.i=NNOR else
+   inst_grupo1DI  <= '1' when uinsDI.i=ADDU or uinsDI.i=SUBU or uinsDI.i=AAND
+                  or uinsDI.i=OOR or uinsDI.i=XXOR or uinsDI.i=NNOR else
             '0';
-   inst_grupo1e3  <= '1' when uins3.i=ADDU or uins3.i=SUBU or uins3.i=AAND
-                         or uins3.i=OOR or uins3.i=XXOR or uins3.i=NNOR else
+   inst_grupo1EX  <= '1' when uinsEX.i=ADDU or uinsEX.i=SUBU or uinsEX.i=AAND
+                         or uinsEX.i=OOR or uinsEX.i=XXOR or uinsEX.i=NNOR else
                    '0';
 
    --==============================================================================
-   -- first_stage
+   -- BI_stage
    --==============================================================================
-   ERBI: entity work.erbi port map (
-                              ck => ck,
-                              rst=>rst,
-                              dtpc => dtpc,
-                              pc => pc
-                           );
+
+   dtpc <= result when (inst_branchMEM='1' and salta='1') or uinsMEM.i=J    or uinsMEM.i=JAL or uinsMEM.i=JALR or
+                        uinsMEM.i=JR  
+                  else npcBI;
   
-   incpc <= pc + 4;
+   npcBI <= pc + 4;
   
    --RNPC: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>incpc,       Q=>npc);     
            
    --RIR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.CY1, D=>instruction, Q=>IR);
-
-   IR_OUT <= IR ;    -- IR is the datapath output signal to carry the instruction
              
    i_address <= pc;  -- connects PC output to the instruction memory address bus
    
    
    --==============================================================================
-   -- second stage
+   -- DI stage
    --==============================================================================
+   ct: entity work.control_unit port map( ck=>ck, rst=>rst, ir=>IR, uins=>uinsDI);
+
    BIDI: entity work.bidi port map (
     ck => ck,
     rst=>rst,
-    incpc => incpc,
+    npcBI => npcBI,
     instruction => instruction,
-    npc => npc2,
+    npcDI => npcDI,
     IR => IR
  );
                 
    -- The then clause is only used for logic shifts with shamt field       
-   adS <= IR(20 downto 16) when uins5.i=SSLL or uins5.i=SSRA or uins5.i=SSRL else 
+   adS <= IR(20 downto 16) when uinsER.i=SSLL or uinsER.i=SSRA or uinsER.i=SSRL else 
           IR(25 downto 21);
           
    REGS: entity work.reg_bank(reg_bank) port map
-        (ck=>ck, rst=>rst, wreg=>uins5.wreg, AdRs=>adS, AdRt=>IR(20 downto 16), adRD=>adD,  
+        (ck=>ck, rst=>rst, wreg=>uinsER.wreg, AdRs=>adS, AdRt=>IR(20 downto 16), adRD=>adD,  
          Rd=>RIN, R1=>R1, R2=>R2);
     
    -- sign extension 
@@ -87,11 +84,11 @@ begin
              x"0000" & IR(15 downto 0);
     
    -- Immediate constant
-   cte_im <= ext16(29 downto 0)  & "00"     when inst_branch2='1'     else
+   cte_im <= ext16(29 downto 0)  & "00"     when inst_branchDI='1'     else
                 -- branch address adjustment for word frontier
-             "0000" & IR(25 downto 0) & "00" when uins2.i=J or uins2.i=JAL else
+             "0000" & IR(25 downto 0) & "00" when uinsDI.i=J or uinsDI.i=JAL else
                 -- J/JAL are word addressed. MSB four bits are defined at the ALU, not here!
-             x"0000" & IR(15 downto 0) when uins2.i=ANDI or uins2.i=ORI  or uins2.i=XORI else
+             x"0000" & IR(15 downto 0) when uinsDI.i=ANDI or uinsDI.i=ORI  or uinsDI.i=XORI else
                 -- logic instructions with immediate operand are zero extended
              ext16;
                 -- The default case is used by addiu, lbu, lw, sbu and sw instructions
@@ -105,99 +102,100 @@ begin
  
  
   --==============================================================================
-   -- third stage
+   -- EX stage
    --==============================================================================
    DIEX: entity work.diex port map (
       ck => ck,
+      rst => rst,
       R1 => R1,
       R2 => R2,
       cte_im => cte_im,
       RA => RA,
       RB => RB,
       IMED => IMED,
-      npcIN => npc2,
-      npcOUT => npc3,
-      controlSignalsIN => uins2,
-      controlSignalsOUT => uins3
+      npcDI => npcDI,
+      npcEX => npcEX,
+      uinsDI => uinsDI,
+      uinsEX => uinsEX
    );
                       
    -- select the first ALU operand                           
-   op1 <= npc3  when inst_branch3='1' else RA; 
+   op1 <= npcEX  when inst_branchEX='1' else RA; 
      
    -- select the second ALU operand
-   op2 <= RB when inst_grupo1e3='1' or uins3.i=SLTU or uins3.i=SLT or uins3.i=JR 
-                  or uins3.i=SLLV or uins3.i=SRAV or uins3.i=SRLV
+   op2 <= RB when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JR 
+                  or uinsEX.i=SLLV or uinsEX.i=SRAV or uinsEX.i=SRLV
                   else  IMED; 
                  
    -- ALU instantiation
-   inst_alu: entity work.alu port map (op1=>op1, op2=>op2, outalu=>outalu, op_alu=>uins3.i);
+   inst_alu: entity work.alu port map (op1=>op1, op2=>op2, outalu=>outalu, op_alu=>uinsEX.i);
                                    
    -- ALU register
    --REG_alu: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.walu, D=>outalu, Q=>RALU);               
  
    -- evaluation of conditions to take the branch instructions
-   salta <=  '1' when ( (RA=RB  and uins3.i=BEQ)  or (RA>=0  and uins3.i=BGEZ) or
-                        (RA<=0  and uins3.i=BLEZ) or (RA/=RB and uins3.i=BNE) )  else
+   salta <=  '1' when ( (RA=RB  and uinsEX.i=BEQ)  or (RA>=0  and uinsEX.i=BGEZ) or
+                        (RA<=0  and uinsEX.i=BLEZ) or (RA/=RB and uinsEX.i=BNE) )  else
              '0';
                   
              
    --==============================================================================
-   -- fourth stage
+   -- MEM stage
    --==============================================================================
    EXMEM: entity work.exmem port map (
       ck => ck,
+      rst => rst,
       outalu => outalu,
       RALU => RALU,
-      controlSignalsIN => uins3,
-      controlSignalsOUT => uins4
+      uinsEX => uinsEX,
+      uinsMEM => uinsMEM
    );
      
    d_address <= RALU;
     
    -- tristate to control memory write    
-   data <= RB when  uins4.rw='0' else (others=>'Z');  
+   data <= RB when  uinsEX.rw='0' else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
-   mdr_int <= data when uins4.i=LW  else
+   mdr_int <= data when uinsEX.i=LW  else
               x"000000" & data(7 downto 0);
        
    --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
   
-   result <=    MDR when uins4.i=LW  or uins4.i=LBU else
+   result <=    MDR when uinsEX.i=LW  or uinsEX.i=LBU else
                 RALU;
 
    --==============================================================================
-   -- fifth stage
+   -- ER stage
    --==============================================================================
    
    MEMER: entity work.memer port map (
       ck => ck,
+      rst => rst,
       mdr_int => mdr_int,
       MDR => MDR,
-      controlSignalsIN => uins4,
-      controlSignalsOUT => uins5
+      uinsMEM => uinsMEM,
+      uinsER => uinsER
    );
 
    -- signal to be written into the register bank
-   RIN <= npc2 when (uins2.i=JALR or uins2.i=JAL) else result;
+   RIN <= npcDI when (uinsDI.i=JALR or uinsDI.i=JAL) else result;
    
    -- register bank write address selection
-   adD <= "11111"               when uins2.i=JAL else -- JAL writes in register $31
-         IR(15 downto 11)       when inst_grupo1e2='1' or uins2.i=SLTU or uins2.i=SLT or uins2.i=JALR or
-                                     uins2.i=SSLL or uins2.i=SLLV or uins2.i=SSRA or uins2.i=SRAV or
-						                   uins2.i=SSRL or uins2.i=SRLV
+   adD <= "11111"               when uinsDI.i=JAL else -- JAL writes in register $31
+         IR(15 downto 11)       when inst_grupo1DI='1' or uinsDI.i=SLTU or uinsDI.i=SLT or uinsDI.i=JALR or
+                                     uinsDI.i=SSLL or uinsDI.i=SLLV or uinsDI.i=SSRA or uinsDI.i=SRAV or
+						                   uinsDI.i=SSRL or uinsDI.i=SRLV
                                 else
          IR(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
         ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
     
-   dtpc <= result when (inst_branch5='1' and salta='1') or uins3.i=J    or uins3.i=JAL or uins3.i=JALR or uins3.i=JR  
-                  else npc2;
    
    -- Code memory starting address: beware of the OFFSET! 
    -- The one below (x"00400000") serves for code generated 
    -- by the MARS simulator
-   --rpc: entity work.regnbit generic map(INIT_VALUE=>x"00400000")   
-     --                       port map(ck=>ck, rst=>rst, ce=>uins.wpc, D=>dtpc, Q=>pc);
+   rpc: entity work.regnbit generic map(INIT_VALUE=>x"00400000")   
+                            port map(ck=>ck, rst=>rst, ce=>wpc, D=>dtpc, Q=>pc);
 
 
 end datapath;

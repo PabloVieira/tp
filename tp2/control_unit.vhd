@@ -14,8 +14,6 @@ entity control_unit is
 end control_unit;
                    
 architecture control_unit of control_unit is
-   type type_state is (Sidle, Sfetch, Sreg, Salu, Swbk, Sld, Sst, Ssalta);
-   signal PS, NS : type_state;
    signal i : inst_type;      
 begin
       

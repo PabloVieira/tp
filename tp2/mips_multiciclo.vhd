@@ -15,17 +15,15 @@ end MRstd;
 
 architecture MRstd of MRstd is
       signal IR: std_logic_vector(31 downto 0);
-      signal uins: microinstruction;
+      signal uinsMEM: microinstruction;
  begin
 
      dp: entity work.datapath   
-         port map( ck=>clock, rst=>reset, IR_OUT=>IR, uins2=>uins, i_address=>i_address, 
+         port map( ck=>clock, rst=>reset, uinsMEMout=>uinsMEM, i_address=>i_address, 
                    instruction=>instruction, d_address=>d_address,  data=>data);
-
-     ct: entity work.control_unit port map( ck=>clock, rst=>reset, IR=>IR, uins=>uins);
          
-     ce <= uins.ce;
-     rw <= uins.rw; 
-     bw <= uins.bw;
+     ce <= uinsMEM.ce;
+     rw <= uinsMEM.rw; 
+     bw <= uinsMEM.bw;
      
 end MRstd;

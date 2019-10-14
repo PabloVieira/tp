@@ -3,19 +3,17 @@ use IEEE.std_logic_1164.all;
 use work.p_MRstd.all;
 
 entity diex is
-           port(  ck : in std_logic;
+           port(  ck, rst : in std_logic;
                   R1: in std_logic_vector(31 downto 0);
                   R2: in std_logic_vector(31 downto 0);
                   cte_im: in std_logic_vector(31 downto 0);
                   RA: out std_logic_vector(31 downto 0);
                   RB: out std_logic_vector(31 downto 0);
                   IMED: out std_logic_vector(31 downto 0);
-                  npcIN: in std_logic_vector(31 downto 0);
-                  npcOUT: out std_logic_vector(31 downto 0);
-                  --controlSignalsIN: in sinalDeControle;
-                  --controlSignalsOUT: out sinalDeControle
-                  controlSignalsIN: in microinstruction;
-                  controlSignalsOUT: out microinstruction
+                  npcDI: in std_logic_vector(31 downto 0);
+                  npcEX: out std_logic_vector(31 downto 0);
+                  uinsDI: in microinstruction;
+                  uinsEX: out microinstruction
                );
 end diex;
 
@@ -24,12 +22,18 @@ begin
 
   process(ck)
   begin
-    if ck'event and ck = '0' then
+    if rst = '1' then
+      RA <= x"00000000";
+      RB <= x"00000000";
+      IMED <= x"00000000";
+      npcEX <= x"00000000";
+      uinsEX.i <= NOP;
+    elsif ck'event and ck = '1' then
           RA <= R1;
           RB <= R2;
-          npcOUT <= npcIN;
+          npcEX <= npcDI;
           IMED <= cte_im;
-          controlSignalsOUT <= controlSignalsIN;
+          uinsEX <= uinsDI;
         end if;
   end process;
         
