@@ -1,0 +1,43 @@
+Text Segment
+0x00400000  0x3c0a1001  lui $10,0x00001001    8        	lui     $t2, 0x00001001
+0x00400004  0x00000000  nop                   9            nop
+0x00400008  0x3c091001  lui $9,0x00001001     10           lui     $t1, 0x00001001
+0x0040000c  0x00000000  nop                   11           nop
+0x00400010  0x3c0b1001  lui $11,0x00001001    12           lui     $t3, 0x00001001
+0x00400014  0x00000000  nop                   13           nop
+0x00400018  0x3c081001  lui $8,0x00001001     14           lui     $t0, 0x00001001
+0x0040001c  0x00000000  nop                   15           nop
+0x00400020  0x35520058  ori $18,$10,0x0000005817           ori     $s2, $t2, 0x00000058
+0x00400024  0x00000000  nop                   18           nop
+0x00400028  0x3573005c  ori $19,$11,0x0000005c19           ori     $s3, $t3, 0x0000005c
+0x0040002c  0x00000000  nop                   20           nop
+0x00400030  0x35100000  ori $16,$8,0x00000000 21           ori     $s0, $t0, 0x00000000
+0x00400034  0x00000000  nop                   22           nop       
+0x00400038  0x3531002c  ori $17,$9,0x0000002c 23           ori     $s1, $t1, 0x0000002c
+0x0040003c  0x8e520000  lw $18,0x00000000($18)25       	lw      $s2,0($s2)      # o registrador $21 cont�m o tamanho do vetor
+0x00400040  0x00000000  nop                   26       	nop
+0x00400044  0x00000000  nop                   27       	nop
+0x00400048  0x8e730000  lw $19,0x00000000($19)28       	lw      $s3,0($s3)      # o registrador $s3 contem a constante a somar
+0x0040004c  0x1a40000e  blez $18,0x0000000e   32       	blez    $s2, end         # se o tamanho chega a 0, fim do processamento
+0x00400050  0x8e140000  lw $20,0x00000000($16)33       	lw      $s4, 0($s0)      # obtem um elemento do vetor
+0x00400054  0x00000000  nop                   34       	nop
+0x00400058  0x00000000  nop                   35       	nop        
+0x0040005c  0x0293a021  addu $20,$20,$19      36       	addu    $s4, $s4,$s3     # soma a constante
+0x00400060  0x00000000  nop                   37       	nop
+0x00400064  0x00000000  nop                   38       	nop
+0x00400068  0xae340000  sw $20,0x00000000($17)39       	sw      $s4, 0($s1)      # atualiza o vetor
+0x0040006c  0x26100004  addiu $16,$16,0x00000040       	addiu   $s0, $s0, 4       # atualiza o apontador do vetor
+0x00400070  0x26310004  addiu $17,$17,0x00000041       	addiu   $s1, $s1, 4       # atualiza o apontador do vetor
+0x00400074  0x2652ffff  addiu $18,$18,0xffffff43       	addiu   $s2, $s2, -1      # decrementa o contador de tamanho do vetor
+0x00400078  0x08100013  j 0x0040004c          44       	j       loop            # continua a execucao
+0x0040007c  0x00000000  nop                   45   	nop
+0x00400080  0x00000000  nop                   46   	nop
+0x00400084  0x00000000  nop                   47   	nop
+0x00400088  0x08100022  j 0x00400088          50   	j	end		# fim do programa
+0x0040008c  0x00000000  nop                   51   	nop
+0x00400090  0x00000000  nop                   52   	nop
+0x00400094  0x00000000  nop                   53       	nop
+
+Data Segment
+0x10010000    0x00000012 0x000000ff 0x00000003 0x00000014 0x00000878 0x00000031 0x00000062 0x00000010 
+0x10010020    0x00000005 0x00000016 0x00000020 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
