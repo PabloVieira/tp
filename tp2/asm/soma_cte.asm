@@ -9,15 +9,33 @@
         .globl  main            # Declare o rótulo main Como sendo global
         			# É o ponto a partir de onde se inicia a execução
 main:
-        la      $t0,array       # o registrador $t0 contém o endereço do vetor
-        la      $t1,size        # obtém o endereço da posição da memória de dados onde se guarda
+#        la      $t0,array       # o registrador $t0 contém o endereço do vetor
+	lui $1,0x00001001
+	nop
+	nop
+	nop
+	nop
+	ori $8,$1,0x00000000
+#        la      $t1,size        # obtém o endereço da posição da memória de dados onde se guarda
         			# o tamanho do vetor (size)
+        lui $1,0x00001001
+        nop
+        nop
+        nop
+        nop
+        ori $9,$1,0x0000002c
         nop
         nop
         nop
         nop
         lw      $t1,0($t1)      # o registrador $t1 contém o tamanho do vetor
-        la      $t2,const       # obtém o endereço da constante const
+#        la      $t2,const       # obtém o endereço da constante const
+	lui $1,0x00001001
+	nop
+	nop
+	nop
+	nop
+	ori $10,$1,0x00000030
         nop
         nop
         nop

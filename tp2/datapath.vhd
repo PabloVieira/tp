@@ -22,13 +22,12 @@ architecture datapath of datapath is
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
     signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX, inst_grupoI: std_logic;   
     signal salta : std_logic := '0';
-    signal wpc: std_logic := '1';
     signal uinsDI, uinsEX, uinsMEM, uinsER : microinstruction;
 begin
 
    -- auxiliary signals 
    inst_branchDI  <= '1' when uinsDI.i=BEQ or uinsDI.i=BGEZ or uinsDI.i=BLEZ or uinsDI.i=BNE else 
-                  '0';
+   '0';
    inst_branchEX  <= '1' when uinsEX.i=BEQ or uinsEX.i=BGEZ or uinsEX.i=BLEZ or uinsEX.i=BNE else 
                   '0';
    inst_branchMEM  <= '1' when uinsMEM.i=BEQ or uinsMEM.i=BGEZ or uinsMEM.i=BLEZ or uinsMEM.i=BNE else 
@@ -44,8 +43,8 @@ begin
    -- BI_stage
    --==============================================================================
 
-   dtpc <= result when (inst_branchMEM='1' and salta='1') or uinsMEM.i=J    or uinsMEM.i=JAL or uinsMEM.i=JALR or
-                        uinsMEM.i=JR  
+   dtpc <= result when (inst_branchEX='1' and salta='1') or uinsEX.i=J    or uinsEX.i=JAL or uinsEX.i=JALR or
+                        uinsEX.i=JR  
                   else npcBI;
   
    npcBI <= pc + 4;
@@ -151,8 +150,6 @@ begin
       uinsMEM => uinsMEM
    );
 
-   
-
    uinsMEMout <= uinsMEM;
      
    d_address <= RALU;
@@ -166,7 +163,7 @@ begin
        
    --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
   
-   result <=    MDR when uinsMEM.i=LW  or uinsMEM.i=LBU else
+   result <=    MDR when uinsER.i=LW  or uinsER.i=LBU else
                 RALU;
 
    --==============================================================================
@@ -183,13 +180,13 @@ begin
    );
 
    -- signal to be written into the register bank
-   RIN <= npcDI when (uinsDI.i=JALR or uinsDI.i=JAL) else result;
+   RIN <= npcDI when (uinsER.i=JALR or uinsER.i=JAL) else result;
    
    -- register bank write address selection
-   adD <= "11111"               when uinsDI.i=JAL else -- JAL writes in register $31
-         IR(15 downto 11)       when inst_grupo1DI='1' or uinsDI.i=SLTU or uinsDI.i=SLT or uinsDI.i=JALR or
-                                     uinsDI.i=SSLL or uinsDI.i=SLLV or uinsDI.i=SSRA or uinsDI.i=SRAV or
-						                   uinsDI.i=SSRL or uinsDI.i=SRLV
+   adD <= "11111"               when uinsEX.i=JAL else -- JAL writes in register $31
+         IR(15 downto 11)       when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JALR or
+         uinsEX.i=SSLL or uinsEX.i=SLLV or uinsEX.i=SSRA or uinsEX.i=SRAV or
+         uinsEX.i=SSRL or uinsEX.i=SRLV
                                 else
          IR(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
         ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
@@ -199,7 +196,7 @@ begin
    -- The one below (x"00400000") serves for code generated 
    -- by the MARS simulator
    rpc: entity work.regnbit generic map(INIT_VALUE=>x"00400000")   
-                            port map(ck=>ck, rst=>rst, ce=>wpc, D=>dtpc, Q=>pc);
+                            port map(ck=>ck, rst=>rst, ce=>uinsER.wpc, D=>dtpc, Q=>pc);
 
 
 end datapath;

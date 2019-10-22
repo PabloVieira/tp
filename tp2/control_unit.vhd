@@ -61,8 +61,18 @@ begin
     assert i /= invalid_instruction
           report "******************* INVALID INSTRUCTION *************"
           severity error;
-                   
-    uins.i <= i;    -- this instructs the alu to execute its expected operation, if any
+
+   uins.i <= i;    -- this instructs the alu to execute its expected operation, if any
+
+   uins.CY1   <= '1';
+
+   uins.CY2   <= '1';
+
+   uins.walu  <= '1';
+
+   uins.wmdr  <= '1';
+
+   uins.wpc   <= '1';
   
     uins.wreg <= '0' when  i=SW or
                            i=SB or
