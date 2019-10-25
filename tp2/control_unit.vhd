@@ -75,6 +75,7 @@ begin
    uins.wpc   <= '1';
   
     uins.wreg <= '0' when  i=SW or
+                           i=NOP or
                            i=SB or
                            i=SLT or
                            i=SLTU or
@@ -89,7 +90,8 @@ begin
                            i=JALR or
                            i=JR       else '1'; 
    
-    uins.rw	<= '1' when i=LUI or
+    uins.rw	<= '1' when i=NOP or
+                        i=LUI or
                         i=LBU or
                         i=LW    else '0';
                   

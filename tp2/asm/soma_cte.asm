@@ -18,6 +18,10 @@ main:
 	ori $8,$1,0x00000000
 #        la      $t1,size        # obtém o endereço da posição da memória de dados onde se guarda
         			# o tamanho do vetor (size)
+        nop
+        nop
+        nop
+        nop
         lui $1,0x00001001
         nop
         nop

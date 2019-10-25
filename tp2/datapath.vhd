@@ -17,8 +17,8 @@ entity datapath is
 end datapath;
 
 architecture datapath of datapath is
-    signal incpc, pc, npcBI, npcDI, npcEX, IR,  result, R1, R2, RA, RB, RIN, ext16, cte_im, IMED, op1, op2, 
-           outalu, RALU, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
+    signal incpc, pc, npcBI, npcDI, npcEX, IR,  result, R1, R2, RA, RtEX, RtMEM, RIN, ext16, cte_im, IMED, op1, op2, 
+           outalu, RALUmem, RALUer, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
     signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
     signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX, inst_grupoI: std_logic;   
     signal salta : std_logic := '0';
@@ -32,10 +32,10 @@ begin
                   '0';
    inst_branchMEM  <= '1' when uinsMEM.i=BEQ or uinsMEM.i=BGEZ or uinsMEM.i=BLEZ or uinsMEM.i=BNE else 
                   '0';
-   inst_grupo1DI  <= '1' when uinsDI.i=ADDU or uinsDI.i=SUBU or uinsDI.i=AAND
+   inst_grupo1DI  <= '1' when uinsDI.i=ADDU or uinsDI.i=NOP or uinsDI.i=SUBU or uinsDI.i=AAND
                   or uinsDI.i=OOR or uinsDI.i=XXOR or uinsDI.i=NNOR else
             '0';
-   inst_grupo1EX  <= '1' when uinsEX.i=ADDU or uinsEX.i=SUBU or uinsEX.i=AAND
+   inst_grupo1EX  <= '1' when uinsEX.i=ADDU or uinsDI.i=NOP or uinsEX.i=SUBU or uinsEX.i=AAND
                          or uinsEX.i=OOR or uinsEX.i=XXOR or uinsEX.i=NNOR else
                    '0';
 
@@ -43,8 +43,8 @@ begin
    -- BI_stage
    --==============================================================================
 
-   dtpc <= result when (inst_branchEX='1' and salta='1') or uinsEX.i=J    or uinsEX.i=JAL or uinsEX.i=JALR or
-                        uinsEX.i=JR  
+   dtpc <= result when (inst_branchMEM='1' and salta='1') or uinsMEM.i=J    or uinsMEM.i=JAL or uinsMEM.i=JALR or
+                        uinsMEM.i=JR  
                   else npcBI;
   
    npcBI <= pc + 4;
@@ -110,7 +110,7 @@ begin
       R2 => R2,
       cte_im => cte_im,
       RA => RA,
-      RB => RB,
+      RB => RtEX,
       IMED => IMED,
       npcDI => npcDI,
       npcEX => npcEX,
@@ -122,7 +122,7 @@ begin
    op1 <= npcEX  when inst_branchEX='1' else RA; 
      
    -- select the second ALU operand
-   op2 <= RB when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JR 
+   op2 <= RtEX when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JR 
                   or uinsEX.i=SLLV or uinsEX.i=SRAV or uinsEX.i=SRLV
                   else  IMED; 
                  
@@ -133,8 +133,8 @@ begin
    --REG_alu: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.walu, D=>outalu, Q=>RALU);               
  
    -- evaluation of conditions to take the branch instructions
-   salta <=  '1' when ( (RA=RB  and uinsEX.i=BEQ)  or (RA>=0  and uinsEX.i=BGEZ) or
-                        (RA<=0  and uinsEX.i=BLEZ) or (RA/=RB and uinsEX.i=BNE) )  else
+   salta <=  '1' when ( (RA=RtEX  and uinsEX.i=BEQ)  or (RA>=0  and uinsEX.i=BGEZ) or
+                        (RA<=0  and uinsEX.i=BLEZ) or (RA/=RtEX and uinsEX.i=BNE) )  else
              '0';
                   
              
@@ -145,17 +145,19 @@ begin
       ck => ck,
       rst => rst,
       outalu => outalu,
-      RALU => RALU,
+      RALU => RALUmem,
+      RtIN => RtEX,
+      RtOUT => RtMEM,
       uinsEX => uinsEX,
       uinsMEM => uinsMEM
    );
 
    uinsMEMout <= uinsMEM;
      
-   d_address <= RALU;
+   d_address <= RALUmem;
     
    -- tristate to control memory write    
-   data <= RB when  uinsMEM.rw='0' else (others=>'Z');  
+   data <= RtMEM when  uinsMEM.rw='0' and uinsMEM.ce='1'else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
    mdr_int <= data when uinsMEM.i=LW  else
@@ -164,7 +166,7 @@ begin
    --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
   
    result <=    MDR when uinsER.i=LW  or uinsER.i=LBU else
-                RALU;
+                RALUer;
 
    --==============================================================================
    -- ER stage
@@ -175,6 +177,8 @@ begin
       rst => rst,
       mdr_int => mdr_int,
       MDR => MDR,
+      RALUin => RALUmem,
+      RALUout => RALUer,
       uinsMEM => uinsMEM,
       uinsER => uinsER
    );
