@@ -8,6 +8,10 @@ entity exmem is
                 RALU: out std_logic_vector(31 downto 0);
                 RtIN: in std_logic_vector(31 downto 0);
                 RtOUT: out std_logic_vector(31 downto 0);
+                npcEX: in std_logic_vector(31 downto 0);
+                npcMEM: out std_logic_vector(31 downto 0);
+                adDex: in std_logic_vector(4 downto 0);
+                adDmem: out std_logic_vector(4 downto 0) := (others=> '0');    
                   uinsEX: in microinstruction;
                   uinsMEM: out microinstruction
                );
@@ -26,6 +30,8 @@ begin
           --if ce = '1' then
             RALU <= outalu;
             RtOUT <= RtIN;
+            npcMEM <= npcEX;
+            adDmem <= adDex;
             uinsMEM <= uinsEX;
           --end if;
         end if;

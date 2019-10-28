@@ -12,6 +12,8 @@ entity diex is
                   IMED: out std_logic_vector(31 downto 0);
                   npcDI: in std_logic_vector(31 downto 0);
                   npcEX: out std_logic_vector(31 downto 0);
+                  irDI: in std_logic_vector(31 downto 0);
+                  irEX: out std_logic_vector(31 downto 0);
                   uinsDI: in microinstruction;
                   uinsEX: out microinstruction
                );
@@ -27,12 +29,14 @@ begin
       RB <= x"00000000";
       IMED <= x"00000000";
       npcEX <= x"00000000";
+      irEX <= x"00000000";
       uinsEX.i <= NOP;
     elsif ck'event and ck = '1' then
           RA <= R1;
           RB <= R2;
           npcEX <= npcDI;
           IMED <= cte_im;
+          irEX <= irDI;
           uinsEX <= uinsDI;
         end if;
   end process;

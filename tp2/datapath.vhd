@@ -17,9 +17,9 @@ entity datapath is
 end datapath;
 
 architecture datapath of datapath is
-    signal incpc, pc, npcBI, npcDI, npcEX, IR,  result, R1, R2, RA, RtEX, RtMEM, RIN, ext16, cte_im, IMED, op1, op2, 
+    signal incpc, pc, npcBI, npcDI, npcEX, npcMEM, npcER, IRdi, IRex,  result, R1, R2, RA, RtEX, RtMEM, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALUmem, RALUer, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
-    signal adD, adS : std_logic_vector(4 downto 0) := (others=> '0');    
+    signal adDex, adDmem, adDer, adS : std_logic_vector(4 downto 0) := (others=> '0');    
     signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX, inst_grupoI: std_logic;   
     signal salta : std_logic := '0';
     signal uinsDI, uinsEX, uinsMEM, uinsER : microinstruction;
@@ -59,7 +59,7 @@ begin
    --==============================================================================
    -- DI stage
    --==============================================================================
-   ct: entity work.control_unit port map( ck=>ck, rst=>rst, ir=>IR, uins=>uinsDI);
+   ct: entity work.control_unit port map( ck=>ck, rst=>rst, ir=>IRdi, uins=>uinsDI);
 
    BIDI: entity work.bidi port map (
     ck => ck,
@@ -67,27 +67,27 @@ begin
     npcBI => npcBI,
     instruction => instruction,
     npcDI => npcDI,
-    IR => IR
+    IR => IRdi
  );
                 
    -- The then clause is only used for logic shifts with shamt field       
-   adS <= IR(20 downto 16) when uinsER.i=SSLL or uinsER.i=SSRA or uinsER.i=SSRL else 
-          IR(25 downto 21);
+   adS <= IRdi(20 downto 16) when uinsER.i=SSLL or uinsER.i=SSRA or uinsER.i=SSRL else 
+          IRdi(25 downto 21);
           
    REGS: entity work.reg_bank(reg_bank) port map
-        (ck=>ck, rst=>rst, wreg=>uinsER.wreg, AdRs=>adS, AdRt=>IR(20 downto 16), adRD=>adD,  
+        (ck=>ck, rst=>rst, wreg=>uinsER.wreg, AdRs=>adS, AdRt=>IRdi(20 downto 16), adRD=>adDer,  
          Rd=>RIN, R1=>R1, R2=>R2);
     
    -- sign extension 
-   ext16 <=  x"FFFF" & IR(15 downto 0) when IR(15)='1' else
-             x"0000" & IR(15 downto 0);
+   ext16 <=  x"FFFF" & IRdi(15 downto 0) when IRdi(15)='1' else
+             x"0000" & IRdi(15 downto 0);
     
    -- Immediate constant
    cte_im <= ext16(29 downto 0)  & "00"     when inst_branchDI='1'     else
                 -- branch address adjustment for word frontier
-             "0000" & IR(25 downto 0) & "00" when uinsDI.i=J or uinsDI.i=JAL else
+             "0000" & IRdi(25 downto 0) & "00" when uinsDI.i=J or uinsDI.i=JAL else
                 -- J/JAL are word addressed. MSB four bits are defined at the ALU, not here!
-             x"0000" & IR(15 downto 0) when uinsDI.i=ANDI or uinsDI.i=ORI  or uinsDI.i=XORI else
+             x"0000" & IRdi(15 downto 0) when uinsDI.i=ANDI or uinsDI.i=ORI  or uinsDI.i=XORI else
                 -- logic instructions with immediate operand are zero extended
              ext16;
                 -- The default case is used by addiu, lbu, lw, sbu and sw instructions
@@ -114,9 +114,20 @@ begin
       IMED => IMED,
       npcDI => npcDI,
       npcEX => npcEX,
+      irDI => IRdi,
+      irEX => IRex,
       uinsDI => uinsDI,
       uinsEX => uinsEX
    );
+
+      -- register bank write address selection
+      adDer <= "11111"               when uinsEX.i=JAL else -- JAL writes in register $31
+      IRex(15 downto 11)       when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JALR or
+      uinsEX.i=SSLL or uinsEX.i=SLLV or uinsEX.i=SSRA or uinsEX.i=SRAV or
+      uinsEX.i=SSRL or uinsEX.i=SRLV
+                             else
+      IRex(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
+     ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
                       
    -- select the first ALU operand                           
    op1 <= npcEX  when inst_branchEX='1' else RA; 
@@ -145,9 +156,13 @@ begin
       ck => ck,
       rst => rst,
       outalu => outalu,
-      RALU => RALUmem,
+      RALU => RALUmem,      
+      npcEX => npcEX,
+      npcMEM => npcMEM,
       RtIN => RtEX,
       RtOUT => RtMEM,
+      adDex => adDex,
+      adDmem => adDmem,
       uinsEX => uinsEX,
       uinsMEM => uinsMEM
    );
@@ -163,10 +178,6 @@ begin
    mdr_int <= data when uinsMEM.i=LW  else
               x"000000" & data(7 downto 0);
        
-   --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
-  
-   result <=    MDR when uinsER.i=LW  or uinsER.i=LBU else
-                RALUer;
 
    --==============================================================================
    -- ER stage
@@ -177,24 +188,23 @@ begin
       rst => rst,
       mdr_int => mdr_int,
       MDR => MDR,
+      npcMEM => npcMEM,
+      npcER => npcER,
       RALUin => RALUmem,
       RALUout => RALUer,
+      adDmem => adDmem,
+      adDer => adDer,
       uinsMEM => uinsMEM,
       uinsER => uinsER
    );
 
+      --RMDR: entity work.regnbit  port map(ck=>ck, rst=>rst, ce=>uins.wmdr, D=>mdr_int, Q=>MDR);                 
+  
+      result <=    MDR when uinsER.i=LW  or uinsER.i=LBU else
+      RALUer;
+
    -- signal to be written into the register bank
-   RIN <= npcDI when (uinsER.i=JALR or uinsER.i=JAL) else result;
-   
-   -- register bank write address selection
-   adD <= "11111"               when uinsEX.i=JAL else -- JAL writes in register $31
-         IR(15 downto 11)       when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JALR or
-         uinsEX.i=SSLL or uinsEX.i=SLLV or uinsEX.i=SSRA or uinsEX.i=SRAV or
-         uinsEX.i=SSRL or uinsEX.i=SRLV
-                                else
-         IR(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
-        ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
-    
+   RIN <= npcER when (uinsER.i=JALR or uinsER.i=JAL) else result;    
    
    -- Code memory starting address: beware of the OFFSET! 
    -- The one below (x"00400000") serves for code generated 

@@ -18,6 +18,7 @@ architecture reg_bank of reg_bank is
    type bank is array(0 to 31) of std_logic_vector(31 downto 0);
    signal reg : bank ;                            
    signal wen : std_logic_vector(31 downto 0) ;
+   signal nck: std_logic;
 begin            
 
     g1: for i in 0 to 31 generate        
@@ -32,10 +33,12 @@ begin
         g2: if i=29 generate -- SP ---  x10010000 + x800 -- top of stack
            r29: entity work.regnbit generic map(INIT_VALUE=>x"10010800")    
                                   port map(ck=>ck, rst=>rst, ce=>wen(i), D=>RD, Q=>reg(i));
-        end generate;  
-                
+        end generate;
+
+        nck <= not ck;
+
         g3: if i/=29 generate 
-           rx: entity work.regnbit port map(ck=>ck, rst=>rst, ce=>wen(i), D=>RD, Q=>reg(i));                    
+           rx: entity work.regnbit port map(ck=>nck, rst=>rst, ce=>wen(i), D=>RD, Q=>reg(i));                    
         end generate;
                    
    end generate g1;   

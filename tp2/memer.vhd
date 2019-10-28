@@ -8,6 +8,10 @@ entity memer is
                 MDR: out std_logic_vector(31 downto 0);
                 RALUin: in std_logic_vector(31 downto 0);
                 RALUout: out std_logic_vector(31 downto 0);
+                npcMEM: in std_logic_vector(31 downto 0);
+                npcER: out std_logic_vector(31 downto 0);
+                adDmem: in std_logic_vector(4 downto 0);
+                adDer: out std_logic_vector(4 downto 0) := (others=> '0');    
                   uinsMEM: in microinstruction;
                   uinsER: out microinstruction
                );
@@ -26,6 +30,8 @@ begin
       --if ce = '1' then
         MDR <= mdr_int;
         RALUout <= RALUin;
+        npcER <= npcMEM;
+        adDer <= adDmem;
         uinsER <= uinsMEM;
       --end if;
     end if;

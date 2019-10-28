@@ -19,7 +19,7 @@ begin
   begin
        if rst = '1' then
               Q <= INIT_VALUE(31 downto 0);
-       elsif ck'event and ck = '0' then
+       elsif ck'event and ck = '1' then
            if ce = '1' then
               Q <= D; 
            end if;
