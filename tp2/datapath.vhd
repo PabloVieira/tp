@@ -19,7 +19,7 @@ end datapath;
 architecture datapath of datapath is
     signal incpc, pc, npcBI, npcDI, npcEX, npcMEM, npcER, IRdi, IRex,  result, R1, R2, RA, RtEX, RtMEM, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALUmem, RALUer, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
-    signal adDex, adDmem, adDer, adS : std_logic_vector(4 downto 0) := (others=> '0');    
+    signal ir2016, adDex, adDmem, adDer, adS : std_logic_vector(4 downto 0) := (others=> '0');    
     signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX, inst_grupoI: std_logic;   
     signal salta : std_logic := '0';
     signal uinsDI, uinsEX, uinsMEM, uinsER : microinstruction;
@@ -35,7 +35,7 @@ begin
    inst_grupo1DI  <= '1' when uinsDI.i=ADDU or uinsDI.i=NOP or uinsDI.i=SUBU or uinsDI.i=AAND
                   or uinsDI.i=OOR or uinsDI.i=XXOR or uinsDI.i=NNOR else
             '0';
-   inst_grupo1EX  <= '1' when uinsEX.i=ADDU or uinsDI.i=NOP or uinsEX.i=SUBU or uinsEX.i=AAND
+   inst_grupo1EX  <= '1' when uinsEX.i=ADDU or uinsEX.i=SUBU or uinsEX.i=AAND
                          or uinsEX.i=OOR or uinsEX.i=XXOR or uinsEX.i=NNOR else
                    '0';
 
@@ -121,13 +121,15 @@ begin
    );
 
       -- register bank write address selection
-      adDer <= "11111"               when uinsEX.i=JAL else -- JAL writes in register $31
+      adDex <= "11111"               when uinsEX.i=JAL else -- JAL writes in register $31
       IRex(15 downto 11)       when inst_grupo1EX='1' or uinsEX.i=SLTU or uinsEX.i=SLT or uinsEX.i=JALR or
       uinsEX.i=SSLL or uinsEX.i=SLLV or uinsEX.i=SSRA or uinsEX.i=SRAV or
       uinsEX.i=SSRL or uinsEX.i=SRLV
                              else
       IRex(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
      ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
+
+     ir2016 <= IRex(20 downto 16);
                       
    -- select the first ALU operand                           
    op1 <= npcEX  when inst_branchEX='1' else RA; 
@@ -175,7 +177,7 @@ begin
    data <= RtMEM when  uinsMEM.rw='0' and uinsMEM.ce='1'else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
-   mdr_int <= data when uinsMEM.i=LW  else
+   mdr_int <= --data when uinsMEM.i=LW  else
               x"000000" & data(7 downto 0);
        
 

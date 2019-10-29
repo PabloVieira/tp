@@ -18,7 +18,7 @@ begin
     if rst='1' then
       npcDI <= x"00400000";
       IR <= x"00000000";
-  elsif ck'event and ck = '0' then
+  elsif ck'event and ck = '1' then
           --if ce = '1' then
             npcDI <= npcBI;
             IR <= instruction;

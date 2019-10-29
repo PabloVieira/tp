@@ -90,10 +90,8 @@ begin
                            i=JALR or
                            i=JR       else '1'; 
    
-    uins.rw	<= '1' when i=NOP or
-                        i=LUI or
-                        i=LBU or
-                        i=LW    else '0';
+    uins.rw	<= '0' when i=SB or
+                        i=SW    else '1';
                   
     uins.ce <= '1' when i=LUI or
                         i=LBU or
