@@ -43,9 +43,9 @@ begin
    -- BI_stage
    --==============================================================================
 
-   dtpc <= result when (inst_branchMEM='1' and salta='1') or uinsMEM.i=J    or uinsMEM.i=JAL or uinsMEM.i=JALR or
-                        uinsMEM.i=JR  
-                  else npcBI;
+   dtpc <= result when  uinsER.i=JAL or uinsER.i=JALR  else
+           outalu when uinsEX.i=J or uinsEX.i=JR or (inst_branchEX='1' and salta='1')      else npcBI;
+                  
   
    npcBI <= pc + 4;
   
@@ -176,8 +176,7 @@ begin
    data <= RtMEM when ( uinsMEM.rw='0' and uinsMEM.ce='1' ) else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
-   mdr_int <= data when uinsMEM.i=LW  else
-              x"000000" & data(7 downto 0);
+   mdr_int <= x"000000" & data(7 downto 0) when uinsMEM.i=SB  else data;
        
 
    --==============================================================================

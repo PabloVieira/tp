@@ -26,6 +26,7 @@ begin
       RALUout <= x"00000000";
       npcER <= x"00000000";
       adDer <= (others=> '0');   
+      uinsER.ce <= '0';
       uinsER.i <= NOP;
     elsif ck'event and ck = '1' then
       --if ce = '1' then

@@ -30,6 +30,7 @@ begin
       IMED <= x"00000000";
       npcEX <= x"00000000";
       irEX <= x"00000000";
+      uinsEX.ce <= '0';
       uinsEX.i <= NOP;
     elsif ck'event and ck = '1' then
           RA <= R1;
