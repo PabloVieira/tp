@@ -17,13 +17,13 @@ begin
   begin
     if rst='1' then
       npcDI <= x"00400000";
-      IR <= x"00000000";
-  elsif ck'event and ck = '1' then
+      IR 	<= x"00000000";
+    elsif ck'event and ck = '1' then
           --if ce = '1' then
             npcDI <= npcBI;
             IR <= instruction;
           --end if;
-        end if;
+    end if;
   end process;
         
 end bidi;

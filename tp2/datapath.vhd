@@ -129,7 +129,6 @@ begin
       IRex(20 downto 16) -- inst_grupoI='1' or uins.i=SLTIU or uins.i=SLTI 
      ;                 -- or uins.i=LW or  uins.i=LBU  or uins.i=LUI, or default
 
-     ir2016 <= IRex(20 downto 16);
                       
    -- select the first ALU operand                           
    op1 <= npcEX  when inst_branchEX='1' else RA; 
@@ -174,10 +173,10 @@ begin
    d_address <= RALUmem;
     
    -- tristate to control memory write    
-   data <= RtMEM when  uinsMEM.rw='0' and uinsMEM.ce='1'else (others=>'Z');  
+   data <= RtMEM when ( uinsMEM.rw='0' and uinsMEM.ce='1' ) else (others=>'Z');  
 
    -- single byte reading from memory  -- SUPONDO LITTLE ENDIAN
-   mdr_int <= --data when uinsMEM.i=LW  else
+   mdr_int <= data when uinsMEM.i=LW  else
               x"000000" & data(7 downto 0);
        
 

@@ -4,16 +4,16 @@ use work.p_MRstd.all;
 
 entity diex is
            port(  ck, rst : in std_logic;
-                  R1: in std_logic_vector(31 downto 0);
-                  R2: in std_logic_vector(31 downto 0);
+                  R1:     in std_logic_vector(31 downto 0);
+                  R2:     in std_logic_vector(31 downto 0);
                   cte_im: in std_logic_vector(31 downto 0);
-                  RA: out std_logic_vector(31 downto 0);
-                  RB: out std_logic_vector(31 downto 0);
-                  IMED: out std_logic_vector(31 downto 0);
-                  npcDI: in std_logic_vector(31 downto 0);
-                  npcEX: out std_logic_vector(31 downto 0);
-                  irDI: in std_logic_vector(31 downto 0);
-                  irEX: out std_logic_vector(31 downto 0);
+                  RA:     out std_logic_vector(31 downto 0);
+                  RB:     out std_logic_vector(31 downto 0);
+                  IMED:   out std_logic_vector(31 downto 0);
+                  npcDI:  in std_logic_vector(31 downto 0);
+                  npcEX:  out std_logic_vector(31 downto 0);
+                  irDI:   in std_logic_vector(31 downto 0);
+                  irEX:   out std_logic_vector(31 downto 0);
                   uinsDI: in microinstruction;
                   uinsEX: out microinstruction
                );

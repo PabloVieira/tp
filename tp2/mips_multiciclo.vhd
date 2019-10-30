@@ -21,7 +21,7 @@ architecture MRstd of MRstd is
          port map( ck=>clock, rst=>reset, uinsMEMout=>uinsMEM, i_address=>i_address, 
                    instruction=>instruction, d_address=>d_address,  data=>data);
          
-     ce <= uinsMEM.wmdr;
+     ce <= uinsMEM.ce;
      rw <= uinsMEM.rw; 
      bw <= uinsMEM.bw;
      
