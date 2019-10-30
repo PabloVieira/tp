@@ -86,15 +86,12 @@ begin
                            i=BLEZ or
                            i=BNE or
                            i=J or
-                           i=JAL or
-                           i=JALR or
                            i=JR       else '1'; 
    
     uins.rw	<= '0' when i=SB or
                         i=SW    else '1';
                   
-    uins.ce <= '1' when i=LUI or
-                        i=LBU or
+    uins.ce <= '1' when i=LBU or
                         i=LW or
                         i=SB or
                         i=SW     else '0';

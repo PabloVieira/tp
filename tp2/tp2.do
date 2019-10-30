@@ -10,6 +10,9 @@ add wave -noupdate /cpu_tb/cpu/dp/mdr_int
 add wave -noupdate /cpu_tb/cpu/dp/MDR
 add wave -noupdate /cpu_tb/cpu/dp/uinsEX.i
 add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.i
+add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.ce
+add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.rw
+add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.bw
 add wave -noupdate /cpu_tb/cpu/dp/uinsER.i
 add wave -noupdate -expand -group Memory /cpu_tb/Data_mem/RAM(0)
 add wave -noupdate -expand -group Memory /cpu_tb/Data_mem/RAM(4)
@@ -32,11 +35,8 @@ add wave -noupdate -expand -group Regs -color Gold -label {$t3} /cpu_tb/cpu/dp/R
 add wave -noupdate -group ula -color Blue /cpu_tb/cpu/dp/inst_alu/op1
 add wave -noupdate -group ula -color Blue /cpu_tb/cpu/dp/inst_alu/op2
 add wave -noupdate -group ula -color Blue /cpu_tb/cpu/dp/inst_alu/outalu
-add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.ce
-add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.rw
-add wave -noupdate /cpu_tb/cpu/dp/uinsMEM.bw
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1067 ns} 0}
+WaveRestoreCursors {{Cursor 1} {1060 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 232
 configure wave -valuecolwidth 73

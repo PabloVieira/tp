@@ -20,7 +20,7 @@ architecture datapath of datapath is
     signal incpc, pc, npcBI, npcDI, npcEX, npcMEM, npcER, IRdi, IRex,  result, R1, R2, RA, RtEX, RtMEM, RIN, ext16, cte_im, IMED, op1, op2, 
            outalu, RALUmem, RALUer, MDR, mdr_int, dtpc : std_logic_vector(31 downto 0) := (others=> '0');
     signal ir2016, adDex, adDmem, adDer, adS : std_logic_vector(4 downto 0) := (others=> '0');    
-    signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX, inst_grupoI: std_logic;   
+    signal inst_branchDI, inst_branchEX, inst_branchMEM, inst_grupo1DI, inst_grupo1EX: std_logic;   
     signal salta : std_logic := '0';
     signal uinsDI, uinsEX, uinsMEM, uinsER : microinstruction;
 begin
